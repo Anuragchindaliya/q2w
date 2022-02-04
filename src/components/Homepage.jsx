@@ -85,8 +85,6 @@ const Homepage = () => {
         // let d = new Date(Date.UTC(t[0], t[1] - 1, t[2], t[3], t[4], t[5]));
         // return `Last Modified :  ${d.toLocaleTimeString()} ${d.toLocaleDateString(undefined, { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}`;
     }
-    console.log(resData, "new Data");
-
     return (
         <>
             <nav className="navbar navbar-dark bg-dark navbar-fixed-top text-center">
