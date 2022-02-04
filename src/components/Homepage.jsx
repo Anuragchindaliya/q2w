@@ -8,7 +8,6 @@ const Homepage = () => {
     const textareaRef = useRef(null)
     const [isRoomIdChanged, setRoomIdChanged] = useState(false)
 
-
     const focusRoomContent = (e) => {
         if (e.key === "Enter")
             textareaRef.current.focus();
@@ -35,7 +34,7 @@ const Homepage = () => {
                     setResData({ content: "" });
                     setRoomContent("");
                 } else if (res.status === "already") {
-                    setResData(res.data)
+                    setResData({ ...res.data, last_modified: getDateFormat(res.data.last_modified) })
                     setRoomContent(res.data.content);
                 }
                 setRoomIdChanged(false)
@@ -57,7 +56,7 @@ const Homepage = () => {
         return output;
     }
 
-    
+
 
     useEffect(() => {
         let timeOutId = "";
@@ -67,7 +66,7 @@ const Homepage = () => {
             formData.append("content", textData);
             formData.append("last_modified", now());
             fetch("http://192.168.1.30/q2wapi/api/updateroom", { method: "POST", body: formData })
-                .then((res) => res.json()).then(() => setSaveMsg("saved."))
+                .then((res) => res.json()).then(() => { setSaveMsg("saved."); setResData({ ...resData, last_modified: getDateFormat(now()) }) })
         }
         if (roomId.length > 0 && resData.content !== roomContent) {
             timeOutId = setTimeout((roomContent) => {
@@ -80,12 +79,14 @@ const Homepage = () => {
     }, [roomContent])
 
     const getDateFormat = (dateStr) => {
-        return new Date(dateStr).toLocaleString()
+        debugger
+        return `Last Modified - ${new Date(dateStr).toLocaleString()}`;
         // const t = dateStr.split(/[- :]/)
         // let d = new Date(Date.UTC(t[0], t[1] - 1, t[2], t[3], t[4], t[5]));
         // return `Last Modified :  ${d.toLocaleTimeString()} ${d.toLocaleDateString(undefined, { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}`;
     }
     console.log(resData, "new Data");
+
     return (
         <>
             <nav className="navbar navbar-dark bg-dark navbar-fixed-top text-center">
@@ -114,7 +115,7 @@ const Homepage = () => {
                 />
                 <div className='row'>
                     <div className='col-4'> {roomContent.length === 0 ? "No" : roomContent.length} character {saveMsg} </div>
-                    <div className='col-6 ms-auto text-end'>{resData.last_modified && getDateFormat(resData["last_modified"])} </div>
+                    <div className='col-6 ms-auto text-end'>{resData.last_modified} </div>
                 </div>
             </div>
             {/* <footer className="fixed-bottom bg-dark px-3 py-1 text-center">
