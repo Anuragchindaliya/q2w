@@ -1,18 +1,19 @@
 import React, { useState, useRef, useEffect } from 'react'
 
 const Homepage = () => {
-    const [roomId, setRoomId] = useState("");
+    const [roomId, setRoomId] = useState(localStorage.getItem("localRoomId") || "");
     const [resData, setResData] = useState({ content: "" });
     const [roomContent, setRoomContent] = useState("");
+    const [error, setError] = useState("");
     const [saveMsg, setSaveMsg] = useState("saved.")
     const textareaRef = useRef(null)
-    const [isRoomIdChanged, setRoomIdChanged] = useState(false)
+    const roomIdRef = useRef(null)
+    const [isRoomIdChanged, setRoomIdChanged] = useState(true)
 
     const focusRoomContent = (e) => {
         if (e.key === "Enter")
             textareaRef.current.focus();
     }
-
 
     const handleRoomId = (e) => {
         setRoomId(e.target.value);
@@ -21,7 +22,7 @@ const Homepage = () => {
 
     const handleRoomContent = (e) => {
         setRoomContent(e.target.value);
-        setSaveMsg("saving....")
+        roomId.length > 0 && setSaveMsg("saving....")
     }
 
     const handleRoomBlur = (e) => {
@@ -37,26 +38,18 @@ const Homepage = () => {
                     setResData({ ...res.data, last_modified: getDateFormat(res.data.last_modified) })
                     setRoomContent(res.data.content);
                 }
-                setRoomIdChanged(false)
-
-            })
+                setSaveMsg("saved.");
+                setRoomIdChanged(false);
+                localStorage.setItem("localRoomId", roomId)
+            }).catch(err => setError(err))
 
         }
     }
 
     function now() {
-        var d = new Date();
-        var month = d.getMonth() + 1;
-        var day = d.getDate();
-        var hour = d.getHours();
-        var minute = d.getMinutes();
-        var sec = d.getSeconds();
-        // 2022 - 02 - 03 16: 59: 45
-        var output = d.getFullYear() + "-" + (month < 10 ? '0' : '') + month + "-" + (day < 10 ? '0' : '') + day + " " + hour + ":" + minute + ":" + sec;
-        return output;
+        var tzoffset = (new Date()).getTimezoneOffset() * 60000;
+        return new Date(Date.now() - tzoffset).toISOString().slice(0, 19).replace('T', ' ');
     }
-
-
 
     useEffect(() => {
         let timeOutId = "";
@@ -66,7 +59,13 @@ const Homepage = () => {
             formData.append("content", textData);
             formData.append("last_modified", now());
             fetch("http://192.168.1.30/q2wapi/api/updateroom", { method: "POST", body: formData })
-                .then((res) => res.json()).then(() => { setSaveMsg("saved."); setResData({ ...resData, last_modified: getDateFormat(now()) }) })
+                .then((res) => res.json())
+                .then(() => {
+                    setSaveMsg("saved.");
+                    setResData({
+                        ...resData, last_modified: getDateFormat(now())
+                    })
+                })
         }
         if (roomId.length > 0 && resData.content !== roomContent) {
             timeOutId = setTimeout((roomContent) => {
@@ -78,13 +77,24 @@ const Homepage = () => {
         }
     }, [roomContent])
 
+    useEffect(() => {
+        localStorage.getItem("localRoomId") && textareaRef.current.focus();
+    }, [])
+
     const getDateFormat = (dateStr) => {
-        debugger
-        return `Last Modified - ${new Date(dateStr).toLocaleString()}`;
-        // const t = dateStr.split(/[- :]/)
-        // let d = new Date(Date.UTC(t[0], t[1] - 1, t[2], t[3], t[4], t[5]));
-        // return `Last Modified :  ${d.toLocaleTimeString()} ${d.toLocaleDateString(undefined, { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}`;
+        const options = { weekday: "long", year: "numeric", month: "long", day: "numeric", hour: "2-digit", minute: "2-digit", second: "2-digit" };
+        return `Last Modified - ${new Date(dateStr).toLocaleString("en-US", options)}`;
     }
+    const characterSaveMsg = () => {
+
+        if (roomContent.length === 0) {
+            return `No character ${saveMsg}`;
+        }
+        else {
+            return `${roomContent.length} character ${saveMsg}`;
+        }
+    }
+    console.log(now());
     return (
         <>
             <nav className="navbar navbar-dark bg-dark navbar-fixed-top text-center">
@@ -93,11 +103,13 @@ const Homepage = () => {
                         <a className="navbar-brand" href="#/">Query-2-Write</a>
                     </div>
                 </div>
-            </nav>
+            </nav>{
+                error && 'something went wrong...'
+            }
             <div className='container mt-3'>
                 <div className="row mb-2" >
                     <div className="col-12">
-                        <input className="form-control" id="room_id" type="text" placeholder="Enter room id" value={roomId} onKeyPress={focusRoomContent} onChange={handleRoomId} onBlur={handleRoomBlur} autoFocus />
+                        <input className="form-control" id="room_id" type="text" placeholder="Enter room id" value={roomId} onKeyPress={focusRoomContent} onChange={handleRoomId} onBlur={handleRoomBlur} ref={roomIdRef} autoFocus />
                     </div>
                     {/* <div className="col-4">
                         <div className="btn btn-success w-100">Create New</div>
@@ -112,8 +124,8 @@ const Homepage = () => {
                     ref={textareaRef}
                 />
                 <div className='row'>
-                    <div className='col-4'> {roomContent.length === 0 ? "No" : roomContent.length} character {saveMsg} </div>
-                    <div className='col-6 ms-auto text-end'>{resData.last_modified} </div>
+                    <div className='col-4 small'> {roomId.length > 0 ? characterSaveMsg() : "Please Enter room id"}  </div>
+                    <div className='col-6 ms-auto text-end small'>{resData.last_modified} </div>
                 </div>
             </div>
             {/* <footer className="fixed-bottom bg-dark px-3 py-1 text-center">
