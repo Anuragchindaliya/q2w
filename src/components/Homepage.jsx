@@ -1,7 +1,9 @@
 import React, { useState, useRef, useEffect } from 'react'
+import { useParams } from 'react-router-dom';
 
 const Homepage = () => {
-    const [roomId, setRoomId] = useState(localStorage.getItem("localRoomId") || "");
+    let { roomIdPath } = useParams();
+    const [roomId, setRoomId] = useState(roomIdPath || localStorage.getItem("localRoomId") || "");
     const [resData, setResData] = useState({ content: "" });
     const [roomContent, setRoomContent] = useState("");
     const [error, setError] = useState("");
@@ -9,6 +11,8 @@ const Homepage = () => {
     const textareaRef = useRef(null)
     const roomIdRef = useRef(null)
     const [isRoomIdChanged, setRoomIdChanged] = useState(true)
+    // console.log(roomId, resData, roomContent, error, saveMsg, isRoomIdChanged, "rendering");
+    // console.log(`roomID ${roomId}, resData ${JSON.stringify(resData, null, 2)}, resContent ${roomContent}, error ${error}, saveMsg ${saveMsg}, isRoomIdChanged ${isRoomIdChanged}, textareaRef ${textareaRef},roomIdRef ${roomIdRef},-- rendering`);
 
     const focusRoomContent = (e) => {
         if (e.key === "Enter")
@@ -30,7 +34,7 @@ const Homepage = () => {
         if (value.length > 0 && isRoomIdChanged) {
             const formData = new FormData();
             formData.append("room_id", value);
-            fetch("http://192.168.1.30/q2wapi/api/createroom", { method: "POST", body: formData }).then((res) => res.json()).then((res) => {
+            fetch("http://web2rise.q2w.in:100/q2wapi/api/createroom", { method: "POST", body: formData }).then((res) => res.json()).then((res) => {
                 if (res.status === "success") {
                     setResData({ content: "" });
                     setRoomContent("");
@@ -47,6 +51,7 @@ const Homepage = () => {
     }
 
     function now() {
+
         var tzoffset = (new Date()).getTimezoneOffset() * 60000;
         return new Date(Date.now() - tzoffset).toISOString().slice(0, 19).replace('T', ' ');
     }
@@ -58,7 +63,7 @@ const Homepage = () => {
             formData.append("room_id", roomId);
             formData.append("content", textData);
             formData.append("last_modified", now());
-            fetch("http://192.168.1.30/q2wapi/api/updateroom", { method: "POST", body: formData })
+            fetch("http://web2rise.q2w.in:100/q2wapi/api/updateroom", { method: "POST", body: formData })
                 .then((res) => res.json())
                 .then(() => {
                     setSaveMsg("saved.");
@@ -94,7 +99,6 @@ const Homepage = () => {
             return `${roomContent.length} character ${saveMsg}`;
         }
     }
-    console.log(now());
     return (
         <>
             <nav className="navbar navbar-dark bg-dark navbar-fixed-top text-center">
@@ -128,9 +132,9 @@ const Homepage = () => {
                     <div className='col-6 ms-auto text-end small'>{resData.last_modified} </div>
                 </div>
             </div>
-            {/* <footer className="fixed-bottom bg-dark px-3 py-1 text-center">
+            <footer className="fixed-bottom bg-dark px-3 py-1 text-center">
                 <a className="text-white" href="https://www.web2rise.com">Designed By Web2Rise</a>
-            </footer> */}
+            </footer>
         </>
     )
 }
