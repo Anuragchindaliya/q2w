@@ -1,7 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react'
 import { useParams } from 'react-router-dom';
-import Footer from './Footer';
-import Header from './Header';
+
 
 const Homepage = () => {
     let { roomIdPath } = useParams();
