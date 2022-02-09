@@ -12,8 +12,6 @@ const Homepage = () => {
     const textareaRef = useRef(null)
     const roomIdRef = useRef(null)
     const [isRoomIdChanged, setRoomIdChanged] = useState(true)
-    // console.log(roomId, resData, roomContent, error, saveMsg, isRoomIdChanged, "rendering");
-    // console.log(`roomID ${roomId}, resData ${JSON.stringify(resData, null, 2)}, resContent ${roomContent}, error ${error}, saveMsg ${saveMsg}, isRoomIdChanged ${isRoomIdChanged}, textareaRef ${textareaRef},roomIdRef ${roomIdRef},-- rendering`);
 
     const focusRoomContent = (e) => {
         if (e.key === "Enter")
@@ -104,30 +102,35 @@ const Homepage = () => {
     return (
         <>
             {
-                error && 'something went wrong...'
-            }
-            <div className='container mt-3'>
-                <div className="row mb-2" >
-                    <div className="col-12">
-                        <input className="form-control" id="room_id" type="text" placeholder="Enter room id" value={roomId} onKeyPress={focusRoomContent} onChange={handleRoomId} onBlur={handleRoomBlur} ref={roomIdRef} autoFocus />
+                error ?
+                    <div style={{ height: "90vh" }} className="d-flex align-items-center justify-content-center flex-column">
+                        <img src='error.png' style={{ width: "300px" }} alt="something went wront" />
+                        <h1 className='text-center'>Something went wrong...</h1>
                     </div>
-                    {/* <div className="col-4">
-                        <div className="btn btn-success w-100">Create New</div>
-                    </div> */}
-                </div>
+                    :
+                    <div className='container mt-3'>
+                        <div className="row mb-2" >
+                            <div className="col-12">
+                                <input className="form-control" id="room_id" type="text" placeholder="Enter room id" value={roomId} onKeyPress={focusRoomContent} onChange={handleRoomId} onBlur={handleRoomBlur} ref={roomIdRef} autoFocus />
+                            </div>
+                            {/* <div className="col-4">
+                                <div className="btn btn-success w-100">Create New</div>
+                            </div> */}
+                        </div>
 
-                <textarea
-                    className="form-control room_content"
-                    placeholder="Your content..."
-                    value={roomContent}
-                    onChange={handleRoomContent}
-                    ref={textareaRef}
-                />
-                <div className='row'>
-                    <div className='col-4 small'> {roomId.length > 0 ? characterSaveMsg() : "Please Enter room id"}  </div>
-                    <div className='col-6 ms-auto text-end small'>{resData.last_modified} </div>
-                </div>
-            </div>
+                        <textarea
+                            className="form-control room_content"
+                            placeholder="Your content..."
+                            value={roomContent}
+                            onChange={handleRoomContent}
+                            ref={textareaRef}
+                        />
+                        <div className='row'>
+                            <div className='col-4 small'> {roomId.length > 0 ? characterSaveMsg() : "Please Enter room id"}  </div>
+                            <div className='col-6 ms-auto text-end small'>{resData.last_modified} </div>
+                        </div>
+                    </div>
+            }
         </>
     )
 }
