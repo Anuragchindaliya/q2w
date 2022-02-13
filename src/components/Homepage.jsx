@@ -4,6 +4,7 @@ import { useParams } from 'react-router-dom';
 
 const Homepage = () => {
     let { roomIdPath } = useParams();
+    const [state, setState] = useState({ urls: [], numbers: [] })
     const [roomId, setRoomId] = useState(roomIdPath || localStorage.getItem("localRoomId") || "");
     const [resData, setResData] = useState({ content: "" });
     const [roomContent, setRoomContent] = useState("");
@@ -12,6 +13,9 @@ const Homepage = () => {
     const textareaRef = useRef(null)
     const roomIdRef = useRef(null)
     const [isRoomIdChanged, setRoomIdChanged] = useState(true)
+
+    const [tabIndex, setTabIndex] = useState(0);
+
 
     const focusRoomContent = (e) => {
         if (e.key === "Enter")
@@ -40,6 +44,10 @@ const Homepage = () => {
                     setRoomContent("");
                 } else if (res.status === "already") {
                     setResData({ ...res.data, last_modified: getDateFormat(res.data.last_modified) })
+                    let urls = res.data.content.match(/(https?:\/\/)?(www\.)?[-a-zA-Z0-9@:%.+~#=]{1,256}\.[a-zA-Z0-9()]{2,6}\b([-a-zA-Z0-9()@:%+.~#?&//=_]*)/gm)
+                    let numbers = res.data.content.match(/(\+?[0-9]+)?([-| ])?[0-9]{10}/gm);
+                    // console.log(urls, "urls", numbers, "numbers");
+                    setState({ ...state, urls: urls !== null ? urls : [], numbers: numbers !== null ? numbers : [] });
                     setRoomContent(res.data.content);
                 }
                 setSaveMsg("saved.");
@@ -99,32 +107,54 @@ const Homepage = () => {
             return `${roomContent.length} character ${saveMsg}`;
         }
     }
+
+    // console.log(isRoomIdChanged, roomIdRef, textareaRef, saveMsg, error, roomContent, resData, roomId, "rendering");
     return (
         <>
             {
                 error ?
                     <div style={{ height: "90vh" }} className="d-flex align-items-center justify-content-center flex-column">
-                        <img src='error.png' style={{ width: "300px" }} alt="something went wront" />
+                        <img src='assets/img/error.png' style={{ width: "300px" }} alt="something went wront" />
                         <h1 className='text-center'>Something went wrong...</h1>
                     </div>
                     :
                     <div className='container mt-3'>
                         <div className="row mb-2" >
-                            <div className="col-12">
-                                <input className="form-control" id="room_id" type="text" placeholder="Enter room id" value={roomId} onKeyPress={focusRoomContent} onChange={handleRoomId} onBlur={handleRoomBlur} ref={roomIdRef} autoFocus />
+                            <div className="col-md-8">
+                                <input className="form-control mb-2" id="room_id" type="text" placeholder="Enter room id" value={roomId} onKeyPress={focusRoomContent} onChange={handleRoomId} onBlur={handleRoomBlur} ref={roomIdRef} autoFocus />
+                                <textarea
+                                    className="form-control room_content"
+                                    placeholder="Your content..."
+                                    value={roomContent}
+                                    onChange={handleRoomContent}
+                                    ref={textareaRef}
+                                />
                             </div>
-                            {/* <div className="col-4">
-                                <div className="btn btn-success w-100">Create New</div>
-                            </div> */}
-                        </div>
+                            <div className="col-md-4  ">
+                                <nav>
+                                    <div className="nav nav-tabs" id="nav-tab" role="tablist">
+                                        {/* {`tab-pane fade ${tabIndex === 0 && "show active"}`} */}
+                                        <button onClick={() => setTabIndex(0)} className={`nav-link ${tabIndex === 0 && "show active"}`} id="nav-home-tab" data-bs-toggle="tab" data-bs-target="#nav-home" type="button" role="tab" aria-controls="nav-home" aria-selected="true">Links</button>
+                                        <button onClick={() => setTabIndex(1)} className={`nav-link ${tabIndex === 1 && "show active"}`} id="nav-profile-tab" data-bs-toggle="tab" data-bs-target="#nav-profile" type="button" role="tab" aria-controls="nav-profile" aria-selected="false">Contact</button>
+                                        <button onClick={() => setTabIndex(2)} className={`nav-link ${tabIndex === 2 && "show active"}`} id="nav-contact-tab" data-bs-toggle="tab" data-bs-target="#nav-contact" type="button" role="tab" aria-controls="nav-contact" aria-selected="false">Numbers</button>
+                                    </div>
+                                </nav>
+                                <div className="tab-content url overflow-auto" id="nav-tabContent">
+                                    <div className={`tab-pane fade ${tabIndex === 0 && "show active"}`} id="nav-home" role="tabpanel" aria-labelledby="nav-home-tab">
+                                        <ul className="list-group">
+                                            {state.urls.length === 0 ? <h2>No Links</h2> : state.urls.map((url, i) => (<li key={i} className="list-group-item text-truncate"><a href={url} target="_blank" rel="noreferrer">{url}</a></li>))}
+                                        </ul>
+                                    </div>
+                                    <div className={`tab-pane fade ${tabIndex === 1 && "show active"}`} id="nav-profile" role="tabpanel" aria-labelledby="nav-profile-tab">
+                                        <ul className="list-group">
+                                            {state.numbers.length === 0 ? <h2 className='text-center'>No Numbers</h2> : state.numbers.map((url, i) => (<li key={i} className="list-group-item text-truncate"><a href={"tel:" + url}>{url}</a></li>))}
+                                        </ul>
+                                    </div>
+                                    <div className={`tab-pane fade ${tabIndex === 2 && "show active"}`} id="nav-contact" role="tabpanel" aria-labelledby="nav-contact-tab">2</div>
+                                </div>
 
-                        <textarea
-                            className="form-control room_content"
-                            placeholder="Your content..."
-                            value={roomContent}
-                            onChange={handleRoomContent}
-                            ref={textareaRef}
-                        />
+                            </div>
+                        </div>
                         <div className='row'>
                             <div className='col-4 small'> {roomId.length > 0 ? characterSaveMsg() : "Please Enter room id"}  </div>
                             <div className='col-6 ms-auto text-end small'>{resData.last_modified} </div>
