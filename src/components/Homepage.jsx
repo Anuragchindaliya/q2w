@@ -1,5 +1,7 @@
 import React, { useState, useRef, useEffect } from 'react'
 import { useParams } from 'react-router-dom';
+import CredentialModal from './CredentialModal';
+import Q2wTabs from './Q2wTabs';
 
 
 const Homepage = () => {
@@ -13,9 +15,7 @@ const Homepage = () => {
     const textareaRef = useRef(null)
     const roomIdRef = useRef(null)
     const [isRoomIdChanged, setRoomIdChanged] = useState(true)
-
-    const [tabIndex, setTabIndex] = useState(0);
-
+    const [modalShow, setModalShow] = React.useState(false);
 
     const focusRoomContent = (e) => {
         if (e.key === "Enter")
@@ -45,6 +45,15 @@ const Homepage = () => {
                 } else if (res.status === "already") {
                     setResData({ ...res.data, last_modified: getDateFormat(res.data.last_modified) })
                     let urls = res.data.content.match(/(https?:\/\/)?(www\.)?[-a-zA-Z0-9@:%.+~#=]{1,256}\.[a-zA-Z0-9()]{2,6}\b([-a-zA-Z0-9()@:%+.~#?&//=_]*)/gm)
+                    urls = urls.map(url => {
+                        if (url.includes("http")) {
+                            return url;
+                        } else {
+                            return `http://${url}`;
+                        }
+                    })
+
+                    console.log(urls)
                     let numbers = res.data.content.match(/(\+?[0-9]+)?([-| ])?[0-9]{10}/gm);
                     // console.log(urls, "urls", numbers, "numbers");
                     setState({ ...state, urls: urls !== null ? urls : [], numbers: numbers !== null ? numbers : [] });
@@ -118,10 +127,21 @@ const Homepage = () => {
                         <h1 className='text-center'>Something went wrong...</h1>
                     </div>
                     :
-                    <div className='container mt-3'>
+                    <div className='container mt-3 main-section' style={{ height: "calc(100vh - 75px)" }}>
                         <div className="row mb-2" >
                             <div className="col-md-8">
-                                <input className="form-control mb-2" id="room_id" type="text" placeholder="Enter room id" value={roomId} onKeyPress={focusRoomContent} onChange={handleRoomId} onBlur={handleRoomBlur} ref={roomIdRef} autoFocus />
+                                <div className="row">
+                                    <div className="col-md-11 col-10">
+                                        <input className="form-control mb-2" id="room_id" type="text" placeholder="Enter room id" value={roomId} onKeyPress={focusRoomContent} onChange={handleRoomId} onBlur={handleRoomBlur} ref={roomIdRef} autoFocus />
+                                    </div>
+                                    <div className="col-md-1 col-2 d-flex align-items-center">
+                                        <div className='btn btn-danger' onClick={() => setModalShow(true)}>
+                                            <i className='fa fa-lock'></i>
+                                        </div>
+                                        <CredentialModal show={modalShow}
+                                            onHide={() => setModalShow(false)} />
+                                    </div>
+                                </div>
                                 <textarea
                                     className="form-control room_content"
                                     placeholder="Your content..."
@@ -129,37 +149,19 @@ const Homepage = () => {
                                     onChange={handleRoomContent}
                                     ref={textareaRef}
                                 />
+                                <div className='row'>
+                                    <div className='col-md-4 col-5 small'> {roomId.length > 0 ? characterSaveMsg() : "Please Enter room id"}  </div>
+                                    <div className='col-md-6 col-5 ms-auto text-end small'>{resData.last_modified} </div>
+                                </div>
                             </div>
                             <div className="col-md-4  ">
-                                <nav>
-                                    <div className="nav nav-tabs" id="nav-tab" role="tablist">
-                                        {/* {`tab-pane fade ${tabIndex === 0 && "show active"}`} */}
-                                        <button onClick={() => setTabIndex(0)} className={`nav-link ${tabIndex === 0 && "show active"}`} id="nav-home-tab" data-bs-toggle="tab" data-bs-target="#nav-home" type="button" role="tab" aria-controls="nav-home" aria-selected="true">Links</button>
-                                        <button onClick={() => setTabIndex(1)} className={`nav-link ${tabIndex === 1 && "show active"}`} id="nav-profile-tab" data-bs-toggle="tab" data-bs-target="#nav-profile" type="button" role="tab" aria-controls="nav-profile" aria-selected="false">Contact</button>
-                                        <button onClick={() => setTabIndex(2)} className={`nav-link ${tabIndex === 2 && "show active"}`} id="nav-contact-tab" data-bs-toggle="tab" data-bs-target="#nav-contact" type="button" role="tab" aria-controls="nav-contact" aria-selected="false">Numbers</button>
-                                    </div>
-                                </nav>
-                                <div className="tab-content url overflow-auto" id="nav-tabContent">
-                                    <div className={`tab-pane fade ${tabIndex === 0 && "show active"}`} id="nav-home" role="tabpanel" aria-labelledby="nav-home-tab">
-                                        <ul className="list-group">
-                                            {state.urls.length === 0 ? <h2>No Links</h2> : state.urls.map((url, i) => (<li key={i} className="list-group-item text-truncate"><a href={url} target="_blank" rel="noreferrer">{url}</a></li>))}
-                                        </ul>
-                                    </div>
-                                    <div className={`tab-pane fade ${tabIndex === 1 && "show active"}`} id="nav-profile" role="tabpanel" aria-labelledby="nav-profile-tab">
-                                        <ul className="list-group">
-                                            {state.numbers.length === 0 ? <h2 className='text-center'>No Numbers</h2> : state.numbers.map((url, i) => (<li key={i} className="list-group-item text-truncate"><a href={"tel:" + url}>{url}</a></li>))}
-                                        </ul>
-                                    </div>
-                                    <div className={`tab-pane fade ${tabIndex === 2 && "show active"}`} id="nav-contact" role="tabpanel" aria-labelledby="nav-contact-tab">2</div>
-                                </div>
-
+                                <Q2wTabs state={state} />
                             </div>
                         </div>
-                        <div className='row'>
-                            <div className='col-4 small'> {roomId.length > 0 ? characterSaveMsg() : "Please Enter room id"}  </div>
-                            <div className='col-6 ms-auto text-end small'>{resData.last_modified} </div>
-                        </div>
+
                     </div>
+
+
             }
         </>
     )
