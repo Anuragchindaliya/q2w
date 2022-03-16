@@ -9,7 +9,7 @@ import "bootstrap/dist/js/bootstrap.bundle.min";
 function App() {
   return (
     <>
-      <BrowserRouter basename="/q2w">
+      <BrowserRouter>
         <Header />
         <Routes>
           <Route path="/" element={<Homepage />} />

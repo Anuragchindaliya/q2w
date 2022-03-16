@@ -11,7 +11,7 @@
   display: block;
   box-sizing: border-box;
 }
-.url{
+.url {
   max-height: 68vh;
 }
 /* .room_content:focus {
@@ -19,3 +19,8 @@
   outline: none;
   box-shadow: none;
 } */
+@media  (max-width: 992px) {
+  .q2wtabs {
+    display: none !important;
+  }
+}
