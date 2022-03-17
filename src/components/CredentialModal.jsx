@@ -1,7 +1,9 @@
 import React, { useState } from 'react'
 import { now } from '../utils'
 import { Modal, Button, Form } from 'react-bootstrap'
+import weburl from '../config'
 const CredentialModal = ({ show, onHide, roomId }) => {
+    // const { roomId, ...rest } = props
     const [password, setPassword] = useState("")
     console.log(password, "modal rendered", roomId)
     const updatePassword = () => {
@@ -9,10 +11,11 @@ const CredentialModal = ({ show, onHide, roomId }) => {
         formData.append("room_id", roomId);
         formData.append("pass", password);
         formData.append("last_modified", now());
-        fetch("https://q2w.in/q2wapi/api/updateroom", { method: "POST", body: formData })
+        fetch(`${weburl}/api/updateroom`, { method: "POST", body: formData })
             .then((res) => res.json())
-            .then(() => {
-
+            .then((result) => {
+                console.log(result, "updatepassword")
+                onHide();
                 // setResData({
                 //     ...resData, last_modified: getDateFormat(now())
                 // })

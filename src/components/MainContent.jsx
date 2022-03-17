@@ -1,9 +1,10 @@
 import React, { useState, useRef, useEffect } from 'react';
 import Q2wTabs from './Q2wTabs';
 import { now } from '../utils';
+import { Offcanvas } from 'react-bootstrap';
+import weburl from '../config';
 
-
-const MainContent = ({ roomId, setRoomId, setModalShow }) => {
+const MainContent = ({ roomId, setRoomId, setModalShow, show, handleClose }) => {
 
     const [state, setState] = useState({ urls: [], numbers: [] })
 
@@ -47,7 +48,7 @@ const MainContent = ({ roomId, setRoomId, setModalShow }) => {
 
             const formData = new FormData();
             formData.append("room_id", value);
-            fetch("https://q2w.in/q2wapi/api/createroom", { method: "POST", body: formData }).then((res) => res.json()).then((res) => {
+            fetch(`${weburl}/api/createroom`, { method: "POST", body: formData }).then((res) => res.json()).then((res) => {
                 if (res.status === "success") {
                     setResData({ content: "" });
                     setRoomContent("");
@@ -85,12 +86,12 @@ const MainContent = ({ roomId, setRoomId, setModalShow }) => {
             formData.append("room_id", roomId);
             formData.append("content", textData);
             formData.append("last_modified", now());
-            fetch("https://q2w.in/q2wapi/api/updateroom", { method: "POST", body: formData })
+            fetch(`${weburl}/api/updateroom`, { method: "POST", body: formData })
                 .then((res) => res.json())
-                .then(() => {
+                .then((res) => {
                     setSaveMsg("saved.");
                     setResData({
-                        ...resData, last_modified: getDateFormat(now())
+                         ...res.data, last_modified: getDateFormat(now())
                     })
                 })
         }
@@ -113,7 +114,7 @@ const MainContent = ({ roomId, setRoomId, setModalShow }) => {
         return `Last Modified - ${new Date(dateStr).toLocaleString("en-US", options)}`;
     }
 
-
+    console.log(resData, "data");
     // console.log(isRoomIdChanged, roomIdRef, textareaRef, saveMsg, error, roomContent, resData, roomId, "rendering");
     return (
         <>
@@ -153,10 +154,23 @@ const MainContent = ({ roomId, setRoomId, setModalShow }) => {
                                     <div className='col-md-4 col-5 small'> {roomId.length > 0 ? characterSaveMsg() : "Please Enter room id"}  </div>
                                     <div className='col-md-6 col-5 ms-auto text-end small'>{resData.last_modified} </div>
                                 </div>
+                                <div className='row'>
+                                    <div className='col-md-4 col-5 small'> {resData.ip ? resData.ip : "IP not available"} </div>
+                                    <div className='col-md-6 col-5 ms-auto text-end small'> </div>
+                                </div>
                             </div>
                             <div className="col-md-4 q2wtabs ">
                                 <Q2wTabs state={state} />
                             </div>
+
+                            <Offcanvas show={show} onHide={handleClose} placement="end">
+                                <Offcanvas.Header closeButton>
+                                    <Offcanvas.Title>Offcanvas</Offcanvas.Title>
+                                </Offcanvas.Header>
+                                <Offcanvas.Body>
+                                    <Q2wTabs state={state} />
+                                </Offcanvas.Body>
+                            </Offcanvas>
                         </div>
 
                     </div>
