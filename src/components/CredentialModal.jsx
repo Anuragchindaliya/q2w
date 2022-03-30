@@ -35,6 +35,7 @@ const CredentialModal = ({ show, onHide, roomId }) => {
                 </Modal.Title>
             </Modal.Header>
             <Modal.Body>
+                {/* <h3 className='text-center'>Private room Comming soon..</h3> */}
                 <Form>
                     <Form.Group className="mb-3" controlId="formBasicPassword">
                         <Form.Label>Password</Form.Label>

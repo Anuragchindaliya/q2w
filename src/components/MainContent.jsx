@@ -1,6 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react';
 import Q2wTabs from './Q2wTabs';
-import { now } from '../utils';
+import { getLocalStorageObj, now } from '../utils';
 import { Offcanvas } from 'react-bootstrap';
 import weburl from '../config';
 
@@ -15,7 +15,10 @@ const MainContent = ({ roomId, setRoomId, setModalShow, show, handleClose }) => 
 
     const textareaRef = useRef(null)
     const roomIdRef = useRef(null)
-    const [isRoomIdChanged, setRoomIdChanged] = useState(true)
+    const passwordRef = useRef(null);
+    const [isRoomIdChanged, setRoomIdChanged] = useState(true);
+    const [isRoomSecure, setRoomSecure] = useState(false);
+    const [passwordMsg, setPasswordMsg] = useState("")
 
     const characterSaveMsg = () => {
 
@@ -32,8 +35,8 @@ const MainContent = ({ roomId, setRoomId, setModalShow, show, handleClose }) => 
     }
 
     const focusRoomContent = (e) => {
-        if (e.key === "Enter")
-            textareaRef.current.focus();
+        if (e.key === "Enter" && !isRoomSecure)
+            textareaRef.current?.focus();
     }
 
     const handleRoomId = (e) => {
@@ -43,11 +46,15 @@ const MainContent = ({ roomId, setRoomId, setModalShow, show, handleClose }) => 
 
 
     const handleRoomBlur = (e) => {
+        e.preventDefault();
         const { value } = e.target;
+        createRoomApi(value)
+    }
+    const createRoomApi = (value) => {
         if (value.length > 0 && isRoomIdChanged) {
-
             const formData = new FormData();
             formData.append("room_id", value);
+            // getLocalStorageObj("localRoomId", "password") && formData.append("pass", getLocalStorageObj("localRoomId", "password"));
             fetch(`${weburl}/api/createroom`, { method: "POST", body: formData }).then((res) => res.json()).then((res) => {
                 if (res.status === "success") {
                     setResData({ content: "" });
@@ -66,10 +73,18 @@ const MainContent = ({ roomId, setRoomId, setModalShow, show, handleClose }) => 
                     // console.log(urls, "urls", numbers, "numbers");
                     setState({ ...state, urls: urls !== null ? urls : [], numbers: numbers !== null ? numbers : [] });
                     setRoomContent(res.data.content);
+
+                    setRoomSecure(false);
+                } else if (res.status === "secure") {
+                    setRoomSecure(true);
+                    setRoomContent("");
+                    setResData({ content: "" });
                 }
+
                 setSaveMsg("saved.");
                 setRoomIdChanged(false);
-                localStorage.setItem("localRoomId", roomId)
+                console.log(roomId);
+                localStorage.setItem("localRoomId", JSON.stringify({ id: roomId }))
             }).catch(err => {
                 console.log(err)
                 setError(err)
@@ -78,24 +93,24 @@ const MainContent = ({ roomId, setRoomId, setModalShow, show, handleClose }) => 
         }
     }
 
-
     useEffect(() => {
         let timeOutId = "";
         const updateContent = (textData) => {
             const formData = new FormData();
             formData.append("room_id", roomId);
             formData.append("content", textData);
-            formData.append("last_modified", now());
-            fetch(`${weburl}/api/updateroom`, { method: "POST", body: formData })
+            // formData.append("last_modified", now());
+            getLocalStorageObj("localRoomId", "password") && formData.append("pass", getLocalStorageObj("localRoomId", "password"));
+            fetch(`${weburl}/api/updatecontent`, { method: "POST", body: formData })
                 .then((res) => res.json())
                 .then((res) => {
                     setSaveMsg("saved.");
                     setResData({
-                         ...res.data, last_modified: getDateFormat(now())
+                        ...res.data, last_modified: getDateFormat(now())
                     })
                 })
         }
-        if (roomId.length > 0 && resData.content !== roomContent) {
+        if (roomId.length > 0 && resData.content !== roomContent && !isRoomSecure) {
             timeOutId = setTimeout((roomContent) => {
                 updateContent(roomContent);
             }, 1000, roomContent)
@@ -106,7 +121,11 @@ const MainContent = ({ roomId, setRoomId, setModalShow, show, handleClose }) => 
     }, [roomContent])
 
     useEffect(() => {
-        localStorage.getItem("localRoomId") && textareaRef.current.focus();
+        if (isRoomSecure && getLocalStorageObj("localRoomId", "password")) {
+            localStorage.getItem("localRoomId") && passwordRef.current.focus();
+        } else {
+            localStorage.getItem("localRoomId") && textareaRef.current.focus();
+        }
     }, [])
 
     const getDateFormat = (dateStr) => {
@@ -114,7 +133,33 @@ const MainContent = ({ roomId, setRoomId, setModalShow, show, handleClose }) => 
         return `Last Modified - ${new Date(dateStr).toLocaleString("en-US", options)}`;
     }
 
-    console.log(resData, "data");
+    const roomLogin = (e) => {
+        e.preventDefault();
+        const formData = new FormData();
+        formData.append("room_id", roomId);
+        formData.append("pass", passwordRef.current.value);
+        fetch(`${weburl}/api/login`, { method: "POST", body: formData })
+            .then((res) => res.json())
+            .then((res) => {
+                if (res.status === "success") {
+                    setRoomSecure(false);
+                    setSaveMsg("saved.");
+                    setResData({
+                        ...res.data, last_modified: getDateFormat(now())
+                    })
+                    setRoomContent(res.data.content);
+                    localStorage.setItem("localRoomId", JSON.stringify({ id: roomId, password: res.data.pass }))
+                    setPasswordMsg("")
+                } else {
+                    setPasswordMsg("Incorrect password")
+                }
+            })
+    }
+    const handleRoomSubmit = (e) => {
+        e.preventDefault();
+        createRoomApi(e.target.roomId.value)
+    }
+    console.log(resData, isRoomSecure, "data");
     // console.log(isRoomIdChanged, roomIdRef, textareaRef, saveMsg, error, roomContent, resData, roomId, "rendering");
     return (
         <>
@@ -129,25 +174,34 @@ const MainContent = ({ roomId, setRoomId, setModalShow, show, handleClose }) => 
                         <div className="row mb-2" >
                             <div className="col-lg-8">
                                 <div className="row">
-                                    <div className="col-md-11 col-10">
-                                        <input className="form-control mb-2" id="room_id" type="text" placeholder="Enter room id" value={roomId} onKeyPress={focusRoomContent} onChange={handleRoomId} onBlur={handleRoomBlur} ref={roomIdRef} autoFocus />
-                                    </div>
-                                    <div className="col-md-1 col-2">
+                                    <form className={`${isRoomSecure ? "col-md-11 col-10" : "col-12"}`} onSubmit={handleRoomSubmit}>
+                                        <input className="form-control mb-2" id="room_id" type="text" name="roomId" placeholder="Enter room id" value={roomId} onKeyPress={focusRoomContent} onChange={handleRoomId} onBlur={handleRoomBlur} ref={roomIdRef} autoFocus />
+                                    </form>
+                                    {isRoomSecure && <div className="col-md-1 col-2">
                                         <div className='btn btn-danger' onClick={() => setModalShow(true)}>
                                             <i className='fa fa-lock'></i>
                                         </div>
 
-                                    </div>
+                                    </div>}
+
                                 </div>
                                 <div className="row">
                                     <div className="col-md-12">
-                                        <textarea
+                                        {isRoomSecure ? <form onSubmit={roomLogin}>
+                                            <h3>Room is secure {passwordMsg && <span className='text-danger'>{passwordMsg}</span>}</h3>
+                                            <div className='row p-2'>
+                                                <input type="password" placeholder='Enter password' className="form-control mb-2 " ref={passwordRef} />
+                                                <button type="submit" className="btn btn-primary">Login</button>
+                                            </div>
+                                        </form> : <textarea
                                             className="form-control room_content"
                                             placeholder="Your content..."
                                             value={roomContent}
                                             onChange={handleRoomContent}
                                             ref={textareaRef}
                                         />
+
+                                        }
                                     </div>
                                 </div>
                                 <div className='row'>
