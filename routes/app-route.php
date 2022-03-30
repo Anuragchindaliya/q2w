@@ -3,6 +3,7 @@ header('Content-Type: application/json; charset=utf-8');
 
 
 $allGetRoutes = [
+	"/q2wapi",
 	"/api/rooms",
 	"/api/room"
 ];
@@ -10,6 +11,25 @@ $allPostRoutes = [
 	"/api/createroom",
 	"/api/updateroom"
 ];
+function get_client_ip()
+{
+	$ipaddress = '';
+	if (isset($_SERVER['HTTP_CLIENT_IP']))
+		$ipaddress = $_SERVER['HTTP_CLIENT_IP'];
+	else if (isset($_SERVER['HTTP_X_FORWARDED_FOR']))
+		$ipaddress = $_SERVER['HTTP_X_FORWARDED_FOR'];
+	else if (isset($_SERVER['HTTP_X_FORWARDED']))
+		$ipaddress = $_SERVER['HTTP_X_FORWARDED'];
+	else if (isset($_SERVER['HTTP_FORWARDED_FOR']))
+		$ipaddress = $_SERVER['HTTP_FORWARDED_FOR'];
+	else if (isset($_SERVER['HTTP_FORWARDED']))
+		$ipaddress = $_SERVER['HTTP_FORWARDED'];
+	else if (isset($_SERVER['REMOTE_ADDR']))
+		$ipaddress = $_SERVER['REMOTE_ADDR'];
+	else
+		$ipaddress = 'UNKNOWN';
+	return $ipaddress;
+}
 
 function throwJson($result, $successJson, $errorJson)
 {
@@ -122,7 +142,7 @@ $router->map('GET', '/v1/api/[*:action]/t1', function ($id) {
 
 //get all rooms
 
-if ($_SERVER['REQUEST_METHOD'] === "GET" && !in_array($_SERVER['REDIRECT_URL'], $allGetRoutes)) {
+if ($_SERVER['REQUEST_METHOD'] === "GET" && !in_array($_SERVER['REQUEST_METHOD'], $allGetRoutes)) {
 	$router->map('GET', '/api/rooms', function () {
 		$db = app_db();
 
@@ -169,7 +189,7 @@ if ($_SERVER['REQUEST_METHOD'] === "GET" && !in_array($_SERVER['REDIRECT_URL'], 
 			}
 		}
 	});
-} else if ($_SERVER['REQUEST_METHOD'] === "POST" && !in_array($_SERVER['REDIRECT_URL'], $allPostRoutes)) {
+} else if ($_SERVER['REQUEST_METHOD'] === "POST" && !in_array($_SERVER['REQUEST_METHOD'], $allPostRoutes)) {
 	//create room by id
 	$router->map('POST', '/api/createroom', function () {
 		$db = app_db();
@@ -181,31 +201,184 @@ if ($_SERVER['REQUEST_METHOD'] === "GET" && !in_array($_SERVER['REDIRECT_URL'], 
 				'msg' => 'room_id is missing in params',
 			));
 		} else {
-			$result = $db->select("SELECT * FROM rooms WHERE room_id = '$room_id'");
-			if (gettype($result) === "array") {
+			if (isset($_POST["pass"])) {
+				$password = md5($db->CleanDBData($_POST["pass"]));
+				$result = $db->select("SELECT * FROM rooms WHERE room_id = '$room_id' AND pass = '$password'");
+				if (!$result) {
+					die(json_encode(array(
+						'status' => 'failure',
+						'msg' => 'wrong password',
+						'data' => $result,
+					)));
+				} else {
+					die(json_encode(array(
+						'status' => 'success',
+						'msg' => 'valid password',
+						'data' => $result[0],
+					)));
+				}
+			} else {
+				$existRoom = $db->select("SELECT * FROM rooms WHERE room_id = '$room_id'");
+				if (gettype($existRoom) === "array") {
+					if (empty($existRoom[0]["pass"])) {
+						die(json_encode(array(
+							'status' => 'already',
+							'msg' => 'room is already exist',
+							'data' => $existRoom[0],
+						)));
+					} else {
+						die(json_encode(array(
+							'status' => 'secure',
+							'msg' => 'room is secure password needed',
+							'data' => null,
+						)));
+					}
+				} else {
+					$insertResult = $db->Insert("rooms", ["room_id" => $room_id, "ip" => get_client_ip()]);
+					if ($insertResult) {
+						die(json_encode(array(
+							'status' => 'success',
+							'msg' => 'Room Created successfully',
+							'data' => $insertResult,
+						)));
+					} else {
+						die(json_encode(array(
+							'status' => 'success',
+							'msg' => 'Unable to create room',
+							'data' => null,
+						)));
+					}
+				}
+			}
+		}
+	});
+	// create room id end
+
+	//resuable function 
+	function validatePostParams($requiredFields)
+	{
+		// echo print_r($fields);
+		foreach ($requiredFields as $key) {
+			if (!isset($_POST[$key]) || is_null($_POST[$key])) {
 				echo json_encode(array(
-					'status' => 'already',
-					'msg' => 'Room id is already exist',
-					'data' => $result[0],
+					'status' => 'failure',
+					'msg' => "$key is missing in params",
+					'data' => null,
+				));
+				die();
+			}
+		}
+		return true;
+	}
+
+	//validate password by room id
+	$router->map('POST', '/api/setauth', function () {
+		$db = app_db();
+		$requiredFields = ["room_id", "pass"];
+
+		if (validatePostParams($requiredFields)) {
+			$room_id =  $db->CleanDBData($_POST['room_id']);
+			$pass =  md5($db->CleanDBData($_POST['pass']));
+
+			$idResult = $db->select("SELECT * FROM rooms WHERE room_id = '$room_id' and (pass IS NULL or pass = ' ')");
+			if (!$idResult) {
+				echo json_encode(array(
+					'status' => 'failure',
+					'msg' => 'Room id is not exist or secure',
+					'data' => $idResult,
 				));
 			} else {
-				// $result = $db->Insert("INSERT INTO rooms (room_id) VALUES('$room_id')");
-				$result = $db->Insert("rooms", ["room_id" => $room_id]);
+				$dataToSend = ["pass" => $pass, "ip" => get_client_ip()];
+				$result = $db->Update("rooms", $dataToSend, ["room_id" => $room_id]);
 
-				if ($result > 0) {
+				if ($result) {
+					$response = $db->select("SELECT * FROM rooms WHERE room_id = '$room_id'");
 					echo json_encode(array(
 						'status' => 'success',
-						'msg' => 'Room id Created',
-						'data' => $result,
+						'msg' => 'password set Successfully',
+						'data' => $response,
 					));
 				} else {
 					echo json_encode(array(
-						'status' => 'error',
-						'msg' => 'Failed to create room id',
+						'status' => 'failure',
+						'msg' => 'unable to set password',
 						'data' => $result,
 					));
 				}
 			}
+			die();
+		}
+	});
+
+	//validate password by room id
+	$router->map('POST', '/api/login', function () {
+		$db = app_db();
+		$requiredFields = ["room_id", "pass"];
+
+		if (validatePostParams($requiredFields)) {
+			$room_id =  $db->CleanDBData($_POST['room_id']);
+			$pass =  md5($db->CleanDBData($_POST['pass']));
+
+			$idResult = $db->select("SELECT * FROM rooms WHERE room_id = '$room_id'");
+			if (gettype($idResult) !== "array") {
+				echo json_encode(array(
+					'status' => 'error',
+					'msg' => 'Room id is not exist',
+					'data' => $idResult,
+				));
+			} else {
+				$passResult = $db->select("SELECT * FROM rooms WHERE room_id = '$room_id' AND pass = '$pass'");
+				if (gettype($passResult) === "array") {
+					echo json_encode(array(
+						'status' => 'success',
+						'msg' => 'Valid password',
+						'data' => $passResult[0],
+					));
+				} else {
+					echo json_encode(array(
+						'status' => 'failure',
+						'msg' => 'incorrect roomid\'s password',
+						'data' => $passResult,
+					));
+				}
+			}
+			die();
+		}
+	});
+
+	//validate password by room id
+	$router->map('POST', '/api/checkauth', function () {
+		$db = app_db();
+		$requiredFields = ["room_id", "pass"];
+
+		if (validatePostParams($requiredFields)) {
+			$room_id =  $db->CleanDBData($_POST['room_id']);
+			$pass =  $db->CleanDBData($_POST['pass']);
+
+			$idResult = $db->select("SELECT * FROM rooms WHERE room_id = '$room_id'");
+			if (gettype($idResult) !== "array") {
+				echo json_encode(array(
+					'status' => 'error',
+					'msg' => 'Room id is not exist',
+					'data' => $idResult,
+				));
+			} else {
+				$passResult = $db->select("SELECT * FROM rooms WHERE room_id = '$room_id' AND pass = '$pass'");
+				if (gettype($passResult) === "array") {
+					echo json_encode(array(
+						'status' => 'success',
+						'msg' => 'Valid password',
+						'data' => $passResult,
+					));
+				} else {
+					echo json_encode(array(
+						'status' => 'failure',
+						'msg' => 'incorrect roomid\'s password',
+						'data' => $passResult,
+					));
+				}
+			}
+			die();
 		}
 	});
 
@@ -213,35 +386,48 @@ if ($_SERVER['REQUEST_METHOD'] === "GET" && !in_array($_SERVER['REDIRECT_URL'], 
 	$router->map('POST', '/api/updateroom', function () {
 		$db = app_db();
 
-		$room_id =  $db->CleanDBData($_POST['room_id']);
-		if (!$room_id) {
-			echo json_encode(array(
-				'status' => 'failure',
-				'msg' => 'room_id is missing in params',
-				'data' => null,
-			));
-		} else {
-			$result = $db->select("SELECT * FROM rooms WHERE room_id = '$room_id'");
 
-			if (gettype($result) !== "array") {
+		$requiredFields = ["room_id", "content"];
+		if (validatePostParams($requiredFields)) {
+			$room_id =  $db->CleanDBData($_POST['room_id']);
+			$idResult = $db->select("SELECT * FROM rooms WHERE room_id = '$room_id'");
+
+			if (gettype($idResult) !== "array") {
 				echo json_encode(array(
 					'status' => 'error',
 					'msg' => 'Room id is not exist',
-					'data' => $result,
+					'data' => $idResult,
 				));
 			} else {
-				$content = $db->CleanDBData($_POST['content']);
-				$last_modified = $_POST['last_modified'];
+				// optional fields
+				$allFields = ["content", "pass"];
+				$dataToSend = [];
+				foreach ($allFields as $field) {
+					if (isset($_POST[$field])) {
+						if ($field === "pass") {
+							$dataToSend["pass"] = md5($_POST[$field]);
+						} else {
+							$dataToSend[$field] = $db->CleanDBData($_POST[$field]);
+						}
+					}
+				}
+				$dataToSend["ip"] = get_client_ip();
+				// $pass = $db->CleanDBData($_POST['pass']);
+				// $last_modified = $_POST['last_modified'];
+
+				// echo print_r($dataToSend);
+				// die();
 				// echo $last_modified;
 				// die();
 				// $result = $db->Insert("INSERT INTO rooms (room_id) VALUES('$room_id')");
-				$result = $db->Update("rooms", ["content" => $content, "last_modified" => $last_modified], ["room_id" => $room_id], []);
+				$result = $db->Update("rooms", $dataToSend, ["room_id" => $room_id]);
 
 				if ($result > 0) {
+					$idResult = $db->select("SELECT * FROM rooms WHERE room_id = '$room_id'");
 					echo json_encode(array(
 						'status' => 'success',
 						'msg' => 'Room is updated',
-						'data' => $result,
+						'data' => $idResult[0],
 					));
 				} else {
 					echo json_encode(array(
@@ -253,6 +439,75 @@ if ($_SERVER['REQUEST_METHOD'] === "GET" && !in_array($_SERVER['REDIRECT_URL'], 
 			}
 		}
 	});
+
+	//update content
+	$router->map('POST', '/api/updatecontent', function () {
+		$db = app_db();
+
+		$requiredFields = ["room_id", "content"];
+		if (validatePostParams($requiredFields)) {
+			$room_id =  $db->CleanDBData($_POST['room_id']);
+
+			if (isset($_POST["pass"])) {
+				$password = $db->CleanDBData($_POST['pass']);
+				$secureIdResult = $db->select("SELECT * FROM rooms WHERE room_id = '$room_id' AND pass = '$password'");
+				if (gettype($secureIdResult) !== "array") {
+
+					die(json_encode(array(
+						'status' => 'error',
+						'msg' => 'roomid or password is incorrect',
+						'data' => $secureIdResult,
+					)));
+				} else {
+					$dataToSend = ["content" => $db->CleanDBData($_POST['content']), "ip" => get_client_ip()];
+					$updateResult = $db->Update("rooms", $dataToSend, ["room_id" => $room_id]);
+					if ($updateResult) {
+						$newResult = $db->Select("SELECT * FROM rooms WHERE room_id = '$room_id'");
+						echo json_encode(array(
+							'status' => 'success',
+							'msg' => 'updated successfully',
+							'data' => $newResult[0],
+						));
+					} else {
+						echo json_encode(array(
+							'status' => 'failure',
+							'msg' => 'fail to update',
+							'data' => $secureIdResult,
+						));
+					}
+				}
+			} else {
+				//without password
+				$idResult = $db->select("SELECT * FROM rooms WHERE room_id = '$room_id' AND ( pass IS NULL OR pass = ' ')");
+				if (!$idResult) {
+					die(json_encode(array(
+						'status' => 'failure',
+						'msg' => 'Room is secure password missing',
+						'data' => $idResult,
+					)));
+				} else {
+					$dataToSend = ["content" => $db->CleanDBData($_POST['content']), "ip" => get_client_ip()];
+					$updateResult = $db->Update("rooms", $dataToSend, ["room_id" => $room_id]);
+					$newResult = $db->Select("SELECT * FROM rooms WHERE room_id = '$room_id'");
+					if ($updateResult) {
+						die(json_encode(array(
+							'status' => 'success',
+							'msg' => 'updated successfully',
+							'data' => $newResult[0],
+						)));
+					} else {
+						die(json_encode(array(
+							'status' => 'failure',
+							'msg' => 'fail to update',
+							'data' => $idResult,
+						)));
+					}
+				}
+			}
+		}
+	});
+	// update content end
+
 } else {
 	echo json_encode(array(
 		'status' => 'error',

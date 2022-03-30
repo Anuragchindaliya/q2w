@@ -75,7 +75,7 @@ header("Content-Type:")
 				<h1 class="mt-5">Best Way To Create REST API</h1>
 				<p class="lead">Complete howto guide</p>
 
-				<img src="<?php echo APPURL . '/views/img/people.png' ?>">
+		
 
 			</div>
 		</div>
@@ -83,7 +83,7 @@ header("Content-Type:")
 
 		<div class="screen_about">
 
-			<img src="https://placeimg.com/640/480/nature">
+		
 
 			<h1>Together For Lights Seasons Light For Lesser Behold</h1>
 			<h2>Morning Fish For Upon</h2>

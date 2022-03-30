@@ -57,7 +57,6 @@ if ($match && is_callable($match['target'])) {
 } else {
 
   // no route was matched
-
   $app_url_asset = APPURL;
   die(APPURL . ' > 404 page');
 }
