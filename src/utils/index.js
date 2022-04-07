@@ -34,3 +34,59 @@ export function getLocalStorageObj(ObjKey, key) {
 
   return result[key];
 }
+export const getDateFormat = (dateStr) => {
+  const options = {
+    weekday: "long",
+    year: "numeric",
+    month: "long",
+    day: "numeric",
+    hour: "2-digit",
+    minute: "2-digit",
+    second: "2-digit",
+  };
+  return `Last Modified - ${new Date(dateStr).toLocaleString(
+    "en-US",
+    options
+  )}`;
+};
+
+export function actionTypeCreator(type) {
+  return {
+    FETCH: `${type}_FETCH`,
+    SUCCESS: `${type}_SUCCESS`,
+    ERROR: `${type}_ERROR`,
+    RESET: `${type}_RESET`,
+  };
+}
+
+
+export const combineReducers = (reducers) => {
+  const reducerKeys = Object.keys(reducers);
+  const reducerValues = Object.values(reducers);
+  let globalState;
+  reducerKeys.forEach((key, index) => {
+    globalState = { ...globalState, [key]: reducerValues[index][1] };
+  });
+  let finalReducers = {};
+  reducerValues.forEach((value, index) => {
+    finalReducers = { ...finalReducers, [reducerKeys[index]]: value[0] };
+  });
+  return [
+    (state, action) => {
+      let hasStateChanged = false;
+      const newState = {};
+      let nextStateForCurrentKey = {};
+      for (let i = 0; i < reducerKeys.length; i++) {
+        const currentKey = reducerKeys[i];
+        const currentReducer = finalReducers[currentKey];
+        const prevStateForCurrentKey = state[currentKey];
+        nextStateForCurrentKey = currentReducer(prevStateForCurrentKey, action);
+        hasStateChanged =
+          hasStateChanged || nextStateForCurrentKey !== prevStateForCurrentKey;
+        newState[currentKey] = nextStateForCurrentKey;
+      }
+      return hasStateChanged ? newState : state;
+    },
+    globalState,
+  ];
+};

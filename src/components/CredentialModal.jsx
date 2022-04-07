@@ -1,26 +1,26 @@
-import React, { useState } from 'react'
+import React, { useContext, useState } from 'react'
 import { now } from '../utils'
 import { Modal, Button, Form } from 'react-bootstrap'
-import weburl from '../config'
-const CredentialModal = ({ show, onHide, roomId }) => {
-    // const { roomId, ...rest } = props
-    const [password, setPassword] = useState("")
-    console.log(password, "modal rendered", roomId)
-    const updatePassword = () => {
+import { RoomContext } from '../store/RoomProvider'
+import { setPasswordApi } from '../services'
+
+const CredentialModal = ({ show, onHide, }) => {
+    // const [password, setPassword] = useState("");
+    const { roomId, isAuth: { password }, setPassword } = useContext(RoomContext);
+    const createPassword = () => {
         const formData = new FormData();
         formData.append("room_id", roomId);
         formData.append("pass", password);
         formData.append("last_modified", now());
-        fetch(`${weburl}/api/updateroom`, { method: "POST", body: formData })
-            .then((res) => res.json())
-            .then((result) => {
-                console.log(result, "updatepassword")
-                onHide();
-                // setResData({
-                //     ...resData, last_modified: getDateFormat(now())
-                // })
-            })
+        setPasswordApi(formData).then((result) => {
+            // console.log(result, "updatepassword")
+            onHide();
+            // setResData({
+            //     ...resData, last_modified: getDateFormat(now())
+            // })
+        })
     }
+
     return (
         <Modal
             show={show}
@@ -44,7 +44,7 @@ const CredentialModal = ({ show, onHide, roomId }) => {
                 </Form>
             </Modal.Body>
             <Modal.Footer>
-                <Button variant="primary" type="submit" onClick={updatePassword}>
+                <Button variant="primary" type="submit" onClick={createPassword}>
                     Save
                 </Button>
                 <Button onClick={onHide}>Close</Button>

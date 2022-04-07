@@ -3,18 +3,14 @@ import CredentialModal from './CredentialModal'
 import MainContent from './MainContent'
 import { useParams } from 'react-router-dom';
 import { getLocalStorageObj } from '../utils';
-
-
+import RoomProvider from '../store/RoomProvider';
 
 
 
 const Homepage = ({ show, handleClose }) => {
-    let { roomIdPath } = useParams();
     // const initialRoomId = localStorage.getItem("localRoomId") && localStorage.getItem("localRoomId")
     // console.log(initialRoomId, "main compononet");
-    const [roomId, setRoomId] = useState(roomIdPath || getLocalStorageObj("localRoomId", "id") || "");
-    const [modalShow, setModalShow] = React.useState(false);
-
+    const [modalShow, setModalShow] = useState(false);
     // useEffect(() => {
     //     if (getLocalStorageObj("localRoomId", "id")) {
     //         setRoomId(getLocalStorageObj("localRoomId", "id"))
@@ -22,10 +18,10 @@ const Homepage = ({ show, handleClose }) => {
     // }, [])
 
     return (
-        <>
-            <CredentialModal show={modalShow} onHide={() => setModalShow(false)} roomId={roomId} />
-            <MainContent roomId={roomId} setRoomId={setRoomId} setModalShow={setModalShow} show={show} handleClose={handleClose} />
-        </>
+        <RoomProvider>
+            <CredentialModal show={modalShow} onHide={() => setModalShow(false)} />
+            <MainContent setModalShow={setModalShow} show={show} handleClose={handleClose} />
+        </RoomProvider>
     )
 }
 
