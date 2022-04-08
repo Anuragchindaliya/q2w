@@ -14,12 +14,15 @@
 .url {
   max-height: 68vh;
 }
+/* .content-section {
+  background-color: #2f2424;
+} */
 /* .room_content:focus {
   border: 2px dashed red;
   outline: none;
   box-shadow: none;
 } */
-@media  (max-width: 992px) {
+@media (max-width: 992px) {
   .q2wtabs {
     display: none !important;
   }

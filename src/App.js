@@ -6,6 +6,7 @@ import Header from "./components/Header";
 import "bootstrap/dist/css/bootstrap.min.css";
 import "bootstrap/dist/js/bootstrap.bundle.min";
 import { useState } from "react";
+import ReactTooltip from "react-tooltip";
 
 function App() {
   const [show, setShow] = useState(false);
@@ -16,6 +17,7 @@ function App() {
     <>
       <BrowserRouter>
         <Header handleShow={handleShow} />
+        
         <Routes>
           <Route
             path="/"
@@ -24,6 +26,7 @@ function App() {
           <Route path=":roomIdPath" element={<Homepage />} />
         </Routes>
         {/* <Footer /> */}
+        <ReactTooltip effect="solid"/>
       </BrowserRouter>
     </>
   );

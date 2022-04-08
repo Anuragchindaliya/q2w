@@ -18,7 +18,7 @@ const Homepage = ({ show, handleClose }) => {
     // }, [])
 
     return (
-        <RoomProvider>
+        <RoomProvider className="content-section">
             <CredentialModal show={modalShow} onHide={() => setModalShow(false)} />
             <MainContent setModalShow={setModalShow} show={show} handleClose={handleClose} />
         </RoomProvider>

@@ -6,20 +6,20 @@ import { getDateFormat } from '../utils';
 const TextArea = () => {
     const textareaRef = useRef(null)
     // const { roomContent, dispatch, setRoomContent, saveMsg, setSaveMsg, roomId } = useContext(RoomContext);
-    const { roomInfo, roomContent, roomContentSubmit, dispatch, roomId } = useContext(RoomContext);
-    const { content } = roomContent;
+    const { roomInfo, roomIdSubmit, roomContentSubmit, dispatch, roomId } = useContext(RoomContext);
+    const { content } = roomIdSubmit.data;
     const [localRoomContent, setLocalRoomContent] = useState("");
-    const [saveMsg, setSaveMsg] = useState("saved.")
-        ;
+    const [saveMsg, setSaveMsg] = useState("saved.");
 
     const handleRoomContent = (e) => {
         setLocalRoomContent(e.target.value);
+        dispatch({ type: "ROOM_CONTENT_UPDATE", payload: e.target.value })
         setSaveMsg("typing...")
         characterSaveMsg();
     }
 
     const handleUpdatecontent = (newcontent) => {
-        dispatch({ type: "UPDATE_CONTENT_FETCH", })
+        dispatch({ type: "ROOM_CONTENT_FETCH", })
 
         const formData = new FormData();
         formData.append("room_id", roomId.id);
@@ -69,17 +69,17 @@ const TextArea = () => {
     }, [localRoomContent]);
     return (
         <>
-            <div className="row">
+            <div className="row mt-2">
                 <div className="col-md-12">
                     {roomContentSubmit.loading ? <div>content is loading</div> :
-                        roomContent.content.length > 0 ?
-                            <textarea
-                                className="form-control room_content"
-                                placeholder="Your content..."
-                                value={localRoomContent}
-                                onChange={handleRoomContent}
-                                ref={textareaRef}
-                            /> : "No content"}
+
+                        <textarea
+                            className="form-control room_content"
+                            placeholder="Your content..."
+                            value={localRoomContent}
+                            onChange={handleRoomContent}
+                            ref={textareaRef}
+                        />}
                 </div>
             </div>
 

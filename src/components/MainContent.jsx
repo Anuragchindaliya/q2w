@@ -258,7 +258,7 @@ const MainContent = ({ setModalShow, show, handleClose }) => {
     // console.log(resData, isRoomSecure, "data");
     // console.log(isRoomIdChanged, roomIdRef, textareaRef, saveMsg, error, roomContent, resData, roomId, "rendering");
     return (
-        <>
+        <div className='content-section pt-3'>
             {
                 error ?
                     <div style={{ height: "90vh" }} className="d-flex align-items-center justify-content-center flex-column">
@@ -266,34 +266,26 @@ const MainContent = ({ setModalShow, show, handleClose }) => {
                         <h1 className='text-center'>Something went wrong...</h1>
                     </div>
                     :
-                    <div className='container mt-3 main-section' style={{ height: "calc(100vh - 75px)" }}>
+                    <div className='container  main-section' style={{ height: "calc(100vh - 75px)" }}>
                         <div className="row mb-2" >
                             <div className="col-lg-8">
-                                <div className="row">
-                                    {/* <form className={`${isRoomSecure ? "col-md-11 col-10" : "col-12"}`} onSubmit={handleRoomSubmit}>
+
+                                {/* <form className={`${isRoomSecure ? "col-md-11 col-10" : "col-12"}`} onSubmit={handleRoomSubmit}>
                                         <input className="form-control mb-2" id="room_id" type="text" name="roomId" placeholder="Enter room id" value={roomId} onKeyPress={focusRoomContent} onChange={handleRoomId} onBlur={handleRoomBlur} ref={roomIdRef} autoFocus />
                                     </form> */}
-                                    <IdInpute />
-                                    {/* <form className="col-md-11 col-10" onSubmit={handleRoomSubmit}>
+                                <IdInpute />
+                                {/* <form className="col-md-11 col-10" onSubmit={handleRoomSubmit}>
                                         <input className="form-control mb-2" id="room_id" type="text" name="roomId" placeholder="Enter room id" value={roomId.id} onKeyPress={focusRoomContent} onChange={handleRoomId} ref={roomIdRef} autoFocus />
                                         <button type='submit' className='btn btn-danger'>
                                             Enter
                                         </button>
                                     </form> */}
-                                    {/* <div className="col-md-1 col-2">
+                                {/* <div className="col-md-1 col-2">
                                         <div className='btn btn-danger' onClick={() => setModalShow(true)}>
                                             Enter
                                         </div>
 
                                     </div> */}
-                                    {isRoomSecure && <div className="col-md-1 col-2">
-                                        <div className='btn btn-danger' onClick={() => setModalShow(true)}>
-                                            <i className='fa fa-lock'></i>
-                                        </div>
-
-                                    </div>}
-
-                                </div>
                                 <TextArea />
 
                                 {/* <div className="row">
@@ -333,10 +325,8 @@ const MainContent = ({ setModalShow, show, handleClose }) => {
                         </div>
 
                     </div>
-
-
             }
-        </>
+        </div>
     )
 }
 
