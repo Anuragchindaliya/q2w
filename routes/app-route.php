@@ -202,7 +202,7 @@ if ($_SERVER['REQUEST_METHOD'] === "GET" && !in_array($_SERVER['REQUEST_METHOD']
 			));
 		} else {
 			if (isset($_POST["pass"])) {
-				$password = md5($db->CleanDBData($_POST["pass"]));
+				$password = $db->CleanDBData($_POST["pass"]);
 				$result = $db->select("SELECT * FROM rooms WHERE room_id = '$room_id' AND pass = '$password'");
 				if (!$result) {
 					die(json_encode(array(
@@ -212,7 +212,7 @@ if ($_SERVER['REQUEST_METHOD'] === "GET" && !in_array($_SERVER['REQUEST_METHOD']
 					)));
 				} else {
 					die(json_encode(array(
-						'status' => 'success',
+						'status' => 'already',
 						'msg' => 'valid password',
 						'data' => $result[0],
 					)));
@@ -368,7 +368,7 @@ if ($_SERVER['REQUEST_METHOD'] === "GET" && !in_array($_SERVER['REQUEST_METHOD']
 					echo json_encode(array(
 						'status' => 'success',
 						'msg' => 'Valid password',
-						'data' => $passResult,
+						'data' => $passResult[0],
 					));
 				} else {
 					echo json_encode(array(
@@ -385,8 +385,6 @@ if ($_SERVER['REQUEST_METHOD'] === "GET" && !in_array($_SERVER['REQUEST_METHOD']
 	//update room by id
 	$router->map('POST', '/api/updateroom', function () {
 		$db = app_db();
-
-
 		$requiredFields = ["room_id", "content"];
 		if (validatePostParams($requiredFields)) {
 			$room_id =  $db->CleanDBData($_POST['room_id']);
