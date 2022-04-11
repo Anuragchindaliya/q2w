@@ -1,19 +1,19 @@
 import React, { useContext, useEffect, useRef, useState } from 'react'
 import { updateRoomContentApi } from '../services';
 import { RoomContext } from '../store/RoomProvider';
-import { getDateFormat } from '../utils';
+import ContentInfo from './ContentInfo';
 
 const TextArea = () => {
-    const textareaRef = useRef(null)
-    // const { roomContent, dispatch, setRoomContent, saveMsg, setSaveMsg, roomId } = useContext(RoomContext);
-    const { roomInfo, roomIdSubmit, roomContentSubmit, dispatch, roomId } = useContext(RoomContext);
+
+    const { roomIdSubmit, dispatch, roomId } = useContext(RoomContext);
     const { content } = roomIdSubmit.data;
     const [localRoomContent, setLocalRoomContent] = useState("");
     const [saveMsg, setSaveMsg] = useState("saved.");
-
+    console.log(localRoomContent, content, "text here")
     const handleRoomContent = (e) => {
         setLocalRoomContent(e.target.value);
         dispatch({ type: "ROOM_CONTENT_UPDATE", payload: e.target.value })
+        dispatch({ type: "ROOM_INFO_UPDATE", payload: { saveMsg: "typing..." } })
         setSaveMsg("typing...")
         characterSaveMsg();
     }
@@ -31,11 +31,9 @@ const TextArea = () => {
                 setSaveMsg("saved.");
                 dispatch({ type: "ROOM_CONTENT_SUCCESS", payload: res.data })
                 const { ip, last_modified } = res.data;
-                dispatch({ type: "ROOM_INFO_UPDATE", payload: { ip, last_modified } })
+                dispatch({ type: "ROOM_INFO_UPDATE", payload: { ip, last_modified, saveMsg: "saved." } })
             })
     }
-
-
     const characterSaveMsg = () => {
         if (localRoomContent) {
             if (localRoomContent.length === 0) {
@@ -51,16 +49,15 @@ const TextArea = () => {
 
 
     useEffect(() => {
-        if (content) {
-            setLocalRoomContent(content)
-        }
+        content && setLocalRoomContent(content)
     }, [content]);
 
     useEffect(() => {
         let timeoutid;
-        if (localRoomContent.length > 0 && localRoomContent !== content)
+        if (localRoomContent?.length > 0 && localRoomContent !== content)
             timeoutid = setTimeout(() => {
                 setSaveMsg("saving...")
+                dispatch({ type: "ROOM_INFO_UPDATE", payload: { saveMsg: "saving..." } })
                 handleUpdatecontent(localRoomContent)
             }, 1000);
         return () => {
@@ -71,26 +68,26 @@ const TextArea = () => {
         <>
             <div className="row mt-2">
                 <div className="col-md-12">
-                    {roomContentSubmit.loading ? <div>content is loading</div> :
+                    {roomIdSubmit.loading ? <div>content is loading</div> :
 
                         <textarea
                             className="form-control room_content"
                             placeholder="Your content..."
                             value={localRoomContent}
                             onChange={handleRoomContent}
-                            ref={textareaRef}
+
                         />}
                 </div>
             </div>
-
-            <div className='row'>
+            <ContentInfo />
+            {/* <div className='row'>
                 <div className='col-md-4 col-5 small'> {roomId.id.length > 0 ? characterSaveMsg() : "Please Enter room id"}  </div>
                 <div className='col-md-6 col-5 ms-auto text-end small'>{getDateFormat(roomInfo.last_modified)} </div>
             </div>
             <div className='row'>
                 <div className='col-md-4 col-5 small'> {roomInfo.ip ? "IP " + roomInfo.ip : "IP not available"} </div>
                 <div className='col-md-6 col-5 ms-auto text-end small'> </div>
-            </div>
+            </div> */}
 
 
         </>

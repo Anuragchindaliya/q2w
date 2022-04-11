@@ -11,6 +11,7 @@ const IdInpute = () => {
   const initialTab = (getLocalStorageObj("localRoomId", "password") && "secure") || "public";
   const [tab, setTab] = useState(initialTab)
   const [errorMsg, setErrorMsg] = useState("");
+  const [isRoomSecure, setRoomSecure] = useState(false);
   const { FETCH, SUCCESS, ERROR, RESET } = roomIdSubmitTypes;
 
   // const [isRoomIdChanged, setRoomIdChanged] = useState(false);
@@ -21,7 +22,7 @@ const IdInpute = () => {
     dispatch({ type: SUCCESS, payload: res.data })
     const { content, ip, last_modified } = res.data;
     dispatch({ type: "ROOM_CONTENT_UPDATE", payload: content })
-    dispatch({ type: "ROOM_INFO_UPDATE", payload: { ip, last_modified } })
+    dispatch({ type: "ROOM_INFO_UPDATE", payload: { ip, last_modified, saveMsg: "saved." } })
     setErrorMsg("");
   }
   const hitApi = (formData, apiType) => {
@@ -47,6 +48,7 @@ const IdInpute = () => {
           password: res.data.pass
         }
         localStorage.setItem("localRoomId", JSON.stringify(localStorageData))
+        setRoomSecure(true);
       } else {
         console.log("Error in login");
       }
@@ -62,6 +64,7 @@ const IdInpute = () => {
       if (res.status === "success") {
       } else if (res.status === "already") {
         setDataInStore(res, "public")
+        setRoomSecure(false)
       } else if (res.status === "secure") {
         setErrorMsg("this room is secure")
       } else if (res.status === "failure") {
@@ -91,6 +94,7 @@ const IdInpute = () => {
     checkAuthApi(formData).then(res => {
       if (res.status === "success") {
         setDataInStore(res, "secure")
+        setRoomSecure(true);
         // const localStorageData = {
         //   id: roomId.id,
         //   password: res.data.pass
@@ -108,69 +112,7 @@ const IdInpute = () => {
       handleAuth();
     }
   }, [])
-  // const handleRoomSubmit = (e) => {
-  //   e.preventDefault();
-  //   console.log("submit data");
-  //   dispatch({ type: "ROOM_ID_FETCH" })
-  //   const roomIdValue = e.target.roomId.value
-  //   if (roomIdValue.length > 0 && isRoomIdChanged) {
-  //     // debugger
-  //     const formData = new FormData();
-  //     formData.append("room_id", roomIdValue);
-  //     isRoomSecure && formData.append("pass", getLocalStorageObj("localRoomId", "password"));
-  //     createRoomApi(formData).then((res) => {
-  //       if (res.status === "success") {
-  //         setResData({ content: "" });
-  //         setRoomContent("");
-  //         setRoomSecure(false);
-  //       } else if (res.status === "already") {
-  //         // debugger
-  //         dispatch({ type: "ROOM_ID_SUCCESS", payload: res.data })
-  //         setResData((store) => ({ ...store.data, last_modified: getDateFormat(res.data.last_modified) }))
-  //         let urls = res.data.content.match(REGEX.URL)
-  //         urls = urls && urls.map(url => {
-  //           if (url.includes("http")) {
-  //             return url;
-  //           } else {
-  //             return `http://${url}`;
-  //           }
-  //         })
 
-  //         let numbers = res.data.content.match(/(\+?[0-9]+)?([-| ])?[0-9]{10}/gm);
-  //         // console.log(urls, "urls", numbers, "numbers");
-  //         setState({ ...state, urls: urls !== null ? urls : [], numbers: numbers !== null ? numbers : [] });
-  //         setRoomContent(res.data.content);
-
-
-  //         if (isRoomSecure) {
-  //           localStorage.setItem("localRoomId", JSON.stringify({ id: roomId, password: res.data.pass }));
-  //         } else {
-  //           localStorage.setItem("localRoomId", JSON.stringify({ id: roomId }))
-  //         }
-  //         setRoomSecure(false);
-  //         // textareaRef.current.focus();
-  //       } else if (res.status === "secure") {
-  //         setRoomSecure(true);
-  //         setRoomContent("");
-  //         setResData({ content: "" });
-  //         localStorage.setItem("localRoomId", JSON.stringify({ id: roomId }))
-  //       } else if (res.status === "failure") {
-  //         dispatch({ type: "ROOM_ID_ERROR", payload: res.data })
-  //       }
-
-  //       setSaveMsg("saved.");
-  //       setRoomIdChanged(false);
-  //       console.log(roomId);
-
-
-  //     }).catch(err => {
-  //       console.log(err)
-  //       setError(err)
-  //     })
-
-  //   }
-
-  // }
   const handleFields = (e) => {
     dispatch({ type: `${e.target.name}_CHANGE`, payload: e.target.value })
   }
@@ -188,14 +130,14 @@ const IdInpute = () => {
           </div>
 
         </div>
-        <div className='col-md-3 col-6 btn text-end' onClick={() => setModalShow(true)}>Secure This Room</div>
+        {!isRoomSecure && <div className='col-md-3 col-6 btn text-end' onClick={() => setModalShow(true)}>Secure This Room</div>}
       </div>
       <div className='row'>
         <form className="col-12" onSubmit={handleRoomSubmit}>
           <div className="input-group">
             <input className="form-control" id="room_id" type="text" name="ROOM_ID" placeholder="Enter room id" value={roomId.id} onChange={handleFields} autoFocus aria-label="Enter room ID" aria-describedby="basic-addon2" />
 
-            {tab === "secure" && <input className="form-control" id="room_password" type="password" name="ROOM_PASSWORD" placeholder="Enter room password" value={roomId.password} onChange={handleFields}  aria-label="Enter password" aria-describedby="basic login password" />}
+            {tab === "secure" && <input className="form-control" id="room_password" type="password" name="ROOM_PASSWORD" placeholder="Enter room password" value={roomId.password} onChange={handleFields} aria-label="Enter password" aria-describedby="basic login password" />}
 
             <button type="submit" className="input-group-text btn-danger" id="basic-addon2">
               {/* <svg width={"20px"} fill="#fff" xmlns="http://www.w3.org/2000/svg" xmlnsXlink="http://www.w3.org/1999/xlink" version="1.1" id="Layer_1" x="0px" y="0px" viewBox="0 0 122.88 121.43" style={{ enableBackground: 'new 0 0 122.88 121.43' }} xmlSpace="preserve"><g><path d="M112.67,62.75L6.45,115.3l27.99-52.55H112.67L112.67,62.75z M121.62,59L2.78,0.2C1.82-0.27,0.67,0.12,0.2,1.08 C-0.09,1.66-0.05,2.3,0.23,2.83l-0.01,0l30.88,57.98L0.22,118.79l2.56,2.64L121.8,62.55l0-0.01c0.64-0.31,1.08-0.97,1.08-1.72 c0,0,0,0,0,0C122.88,60,122.38,59.28,121.62,59L121.62,59L121.62,59z" /></g></svg> */}

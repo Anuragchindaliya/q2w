@@ -25,7 +25,7 @@ const Q2wTabs = () => {
         console.log("you are writing")
         timeoutid = setTimeout(() => {
             updateState()
-        }, 2000)
+        }, 1000)
         return () => {
             clearTimeout(timeoutid);
         }
