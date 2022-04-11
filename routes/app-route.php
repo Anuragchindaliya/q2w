@@ -234,16 +234,17 @@ if ($_SERVER['REQUEST_METHOD'] === "GET" && !in_array($_SERVER['REQUEST_METHOD']
 						)));
 					}
 				} else {
-					$insertResult = $db->Insert("rooms", ["room_id" => $room_id, "ip" => get_client_ip()]);
-					if ($insertResult) {
+					$insertStatus = $db->Insert("rooms", ["room_id" => $room_id, "ip" => get_client_ip()]);
+					$insertResult = $db->select("SELECT * FROM rooms WHERE room_id = '$room_id'");
+					if ($insertStatus) {
 						die(json_encode(array(
 							'status' => 'success',
 							'msg' => 'Room Created successfully',
-							'data' => $insertResult,
+							'data' => $insertResult[0],
 						)));
 					} else {
 						die(json_encode(array(
-							'status' => 'success',
+							'status' => 'failure',
 							'msg' => 'Unable to create room',
 							'data' => null,
 						)));
