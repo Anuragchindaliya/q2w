@@ -14,6 +14,8 @@ const reducer = (state, action) => {
         ...(last_modified && { last_modified }),
         ...(saveMsg && { saveMsg }),
       };
+    case "ROOM_INFO_RESET":
+      return roomInfoInitial;
     default:
       return state;
   }

@@ -7,6 +7,8 @@ const reducer = (state, action) => {
   switch (type) {
     case "ROOM_CONTENT_UPDATE":
       return { ...state, content: payload };
+    case "ROOM_CONTENT_RESET":
+      return roomContentInitial;
     default:
       return state;
   }

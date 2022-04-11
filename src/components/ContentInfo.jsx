@@ -3,10 +3,10 @@ import { RoomContext } from '../store/RoomProvider'
 import { getDateFormat } from '../utils';
 
 const ContentInfo = () => {
-    const { roomId, roomInfo, roomContent, saveMsg } = useContext(RoomContext);
-    console.log(roomInfo, "from info")
+    const { roomId, roomInfo, roomContent } = useContext(RoomContext);
+    // console.log(roomContent, "content from content info");
     const characterSaveMsg = () => {
-        if (roomContent.length === 0) {
+        if (roomContent.content.length === 0) {
             return `No character ${roomInfo.saveMsg}`;
         }
         else {

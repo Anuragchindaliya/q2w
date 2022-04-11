@@ -37,6 +37,7 @@ const CredentialModal = ({ show, onHide, }) => {
             (res) => {
                 if (res.status === "success") {
                     console.log("room is secure");
+                    // localStorage.get
                 } else if (res.status === "failure") {
                     console.log(res.msg)
                 }

@@ -18,6 +18,8 @@ const reducer = (state, action) => {
   switch (type) {
     case "ROOM_PASSWORD_CHANGE":
       return { ...state, password: payload };
+    case "ROOM_PASSWORD_RESET":
+      return { password: "" };
     default:
       return state;
   }

@@ -17,6 +17,8 @@ const reducer = (state, action) => {
   switch (type) {
     case "ROOM_ID_CHANGE":
       return { ...state, id: payload };
+    case "ROOM_ID_RESET":
+      return { id: "" };
     default:
       return state;
   }
