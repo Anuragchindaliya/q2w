@@ -8,17 +8,8 @@ const TextArea = () => {
 
     const { roomIdSubmit, roomContent, dispatch, roomId } = useContext(RoomContext);
     const [isRoomContentChanged, setRoomContentChanged] = useState(false);
+    const textAreaRef = useRef(null)
 
-    // const [localRoomContent, setLocalRoomContent] = useState("");
-
-    // console.log(localRoomContent, content, "text here")
-    console.log(roomIdSubmit.data, "submit result")
-    const handleRoomContent = (e) => {
-        // setLocalRoomContent(e.target.value);
-        dispatch({ type: "ROOM_CONTENT_UPDATE", payload: e.target.value })
-        dispatch({ type: "ROOM_INFO_UPDATE", payload: { saveMsg: "typing..." } })
-        setRoomContentChanged(true);
-    }
 
     const handleUpdatecontent = (newcontent) => {
         dispatch({ type: "ROOM_CONTENT_FETCH", })
@@ -39,14 +30,21 @@ const TextArea = () => {
     }
 
 
-    const { content } = roomIdSubmit.data;
-    // useEffect(() => {
-    //     dispatch({ type: "ROOM_CONTENT_UPATE" })
-    // }, [content]);
+    // const { content } = roomIdSubmit.data;
+
+    const handleRoomContent = (e) => {
+        dispatch({ type: "ROOM_CONTENT_UPDATE", payload: e.target.value })
+        dispatch({ type: "ROOM_INFO_UPDATE", payload: { saveMsg: "typing..." } })
+        setRoomContentChanged(true);
+    }
 
     useEffect(() => {
         let timeoutid;
-        if (roomId.id && isRoomContentChanged && roomContent.content !== content)
+        console.log("content changed in room")
+        if (roomContent.content !== null && textAreaRef.current) {
+            textAreaRef.current.focus();
+        }
+        if (roomId.id && isRoomContentChanged && roomContent.content !== roomIdSubmit.data.content)
             timeoutid = setTimeout(() => {
 
                 dispatch({ type: "ROOM_INFO_UPDATE", payload: { saveMsg: "saving..." } })
@@ -61,13 +59,13 @@ const TextArea = () => {
             <div className="row mt-2">
                 <div className="col-md-12">
                     {roomIdSubmit.loading ? <div>content is loading</div> :
-
+                        roomContent.content !== null &&
                         <textarea
                             className="form-control room_content"
                             placeholder="Your content..."
                             value={roomContent.content}
                             onChange={handleRoomContent}
-                            autoFocus={!roomIdSubmit.data && true}
+                            ref={textAreaRef}
                         />}
                 </div>
             </div>

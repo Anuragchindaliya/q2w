@@ -17,7 +17,7 @@ const ContentInfo = () => {
     return (
         <>
             <div className='row'>
-                <div className='col-md-4 col-5 small'> {roomId.id.length > 0 ? characterSaveMsg() : "Please Enter room id"}  </div>
+                <div className='col-md-4 col-5 small'> {roomId.id.length > 0 && roomContent.content ? characterSaveMsg() : "Please Enter room id"}  </div>
                 <div className='col-md-6 col-5 ms-auto text-end small'>{getDateFormat(roomInfo.last_modified)} </div>
             </div>
             <div className='row'>

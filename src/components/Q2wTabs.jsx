@@ -22,10 +22,12 @@ const Q2wTabs = () => {
     }
     useEffect(() => {
         let timeoutid;
-        console.log("you are writing")
-        timeoutid = setTimeout(() => {
-            updateState()
-        }, 1000)
+        if (roomContent.content) {
+            console.log("you are writing")
+            timeoutid = setTimeout(() => {
+                updateState()
+            }, 1000)
+        }
         return () => {
             clearTimeout(timeoutid);
         }

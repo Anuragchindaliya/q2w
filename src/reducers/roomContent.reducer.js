@@ -1,5 +1,5 @@
 export const roomContentInitial = {
-  content: "",
+  content: null,
 };
 const reducer = (state, action) => {
   const { type, payload } = action;

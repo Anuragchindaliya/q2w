@@ -1,9 +1,9 @@
 import weburl from "../config";
 
-const hitApi = async (url, type, data) => {
+const hitApi = async (url, httpMethod, bodyData) => {
   return await fetch(url, {
-    method: type,
-    body: data,
+    method: httpMethod,
+    body: bodyData,
   }).then((res) => res.json());
 };
 
@@ -26,3 +26,9 @@ export const setPasswordApi = (formData) => {
 export const checkAuthApi = (formData) => {
   return hitApi(`${weburl}/api/checkauth`, "POST", formData);
 };
+
+// const hitApis = {
+//   roomLoginApi: roomLoginApi,
+// };
+// // hitApis[roomLoginApi](formData);
+// export default hitApis;
