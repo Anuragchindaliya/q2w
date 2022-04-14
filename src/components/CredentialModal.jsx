@@ -6,7 +6,7 @@ import { setPasswordApi } from '../services'
 
 const CredentialModal = ({ show, onHide, }) => {
     // const [password, setPassword] = useState("");
-    const { roomId, isAuth } = useContext(RoomContext);
+    const { roomId, isAuth, dispatch } = useContext(RoomContext);
     const [state, setSate] = useState({ password: "", email: "" })
     const { password, email } = state;
     const createPassword = () => {
@@ -23,21 +23,23 @@ const CredentialModal = ({ show, onHide, }) => {
         })
     }
     const handleState = (e) => {
-        setSate({ ...state, [e.target.name]: e.target.value })
+        setSate((state) => ({ ...state, [e.target.name]: e.target.value }))
     }
     const handleSubmit = (e) => {
         e.preventDefault();
         const formData = new FormData();
         formData.append("room_id", roomId.id);
         formData.append("pass", password);
-        if (email) {
+        if (email && email.length !== 0) {
             formData.append("email", email);
         }
         setPasswordApi(formData).then(
             (res) => {
                 if (res.status === "success") {
                     console.log("room is secure");
-                    // localStorage.get
+                    const { room_id, pass } = res.data;
+                    localStorage.setItem("localRoomId", JSON.stringify({ id: room_id, password: pass }))
+                    dispatch({ type: "ROOM_INFO_UPDATE", payload: res.data })
                 } else if (res.status === "failure") {
                     console.log(res.msg)
                 }
