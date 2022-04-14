@@ -272,7 +272,7 @@ if ($_SERVER['REQUEST_METHOD'] === "GET" && !in_array($_SERVER['REQUEST_METHOD']
 		return true;
 	}
 
-	//validate password by room id
+	//set password by room id
 	$router->map('POST', '/api/setauth', function () {
 		$db = app_db();
 		$requiredFields = ["room_id", "pass"];
@@ -290,6 +290,10 @@ if ($_SERVER['REQUEST_METHOD'] === "GET" && !in_array($_SERVER['REQUEST_METHOD']
 				));
 			} else {
 				$dataToSend = ["pass" => $pass, "ip" => get_client_ip()];
+				if (isset($_POST["email"])) {
+					$dataToSend["email"] = $db->CleanDBData($_POST["email"]);
+				}
+				
 				$result = $db->Update("rooms", $dataToSend, ["room_id" => $room_id]);
 
 				if ($result) {
