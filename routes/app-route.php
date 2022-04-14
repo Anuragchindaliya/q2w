@@ -293,7 +293,7 @@ if ($_SERVER['REQUEST_METHOD'] === "GET" && !in_array($_SERVER['REQUEST_METHOD']
 				if (isset($_POST["email"])) {
 					$dataToSend["email"] = $db->CleanDBData($_POST["email"]);
 				}
-				
+
 				$result = $db->Update("rooms", $dataToSend, ["room_id" => $room_id]);
 
 				if ($result) {
@@ -301,7 +301,7 @@ if ($_SERVER['REQUEST_METHOD'] === "GET" && !in_array($_SERVER['REQUEST_METHOD']
 					echo json_encode(array(
 						'status' => 'success',
 						'msg' => 'password set Successfully',
-						'data' => $response,
+						'data' => $response[0],	
 					));
 				} else {
 					echo json_encode(array(
