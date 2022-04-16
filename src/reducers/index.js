@@ -10,6 +10,7 @@ import roomInfoReducer, { roomInfoInitial } from "./roomInfo.reducer";
 import roomPasswordReducer, {
   roomPasswordInitial,
 } from "./roomPassword.reducer";
+import roomLinksReducer, { roomLinksInitial } from "./roomLinks.reducer";
 
 const allReducers = {
   roomId: [roomIdReducer, roomIdInitial],
@@ -18,5 +19,6 @@ const allReducers = {
   roomContent: [roomContentReducer, roomContentInitial],
   roomContentSubmit: [roomContentSubmitReducer, roomContentSubmitInitial],
   roomInfo: [roomInfoReducer, roomInfoInitial],
+  roomLinks: [roomLinksReducer, roomLinksInitial],
 };
 export default allReducers;

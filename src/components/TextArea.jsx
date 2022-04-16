@@ -1,7 +1,7 @@
 import React, { useContext, useEffect, useRef, useState } from 'react'
 import { updateRoomContentApi } from '../services';
 import { RoomContext } from '../store/RoomProvider';
-import { getLocalStorageObj } from '../utils';
+import { getLocalStorageObj, updateLinks } from '../utils';
 import ContentInfo from './ContentInfo';
 
 const TextArea = () => {
@@ -9,8 +9,6 @@ const TextArea = () => {
     const { roomIdSubmit, roomContent, dispatch, roomId } = useContext(RoomContext);
     const [isRoomContentChanged, setRoomContentChanged] = useState(false);
     const textAreaRef = useRef(null)
-
-
     const handleUpdatecontent = (newcontent) => {
         dispatch({ type: "ROOM_CONTENT_FETCH", })
 
@@ -25,12 +23,10 @@ const TextArea = () => {
                 dispatch({ type: "ROOM_CONTENT_SUCCESS", payload: res.data })
                 const { ip, last_modified } = res.data;
                 dispatch({ type: "ROOM_INFO_UPDATE", payload: { ip, last_modified, saveMsg: "saved." } })
+                dispatch({ type: "ROOM_LINKS_UPDATE", payload: updateLinks(roomContent.content) })
                 setRoomContentChanged(false);
             })
     }
-
-
-    // const { content } = roomIdSubmit.data;
 
     const handleRoomContent = (e) => {
         dispatch({ type: "ROOM_CONTENT_UPDATE", payload: e.target.value })
@@ -40,14 +36,13 @@ const TextArea = () => {
 
     useEffect(() => {
         let timeoutid;
-        console.log("content changed in room")
         if (roomContent.content !== null && textAreaRef.current) {
             textAreaRef.current.focus();
         }
         if (roomId.id && isRoomContentChanged && roomContent.content !== roomIdSubmit.data.content)
             timeoutid = setTimeout(() => {
-
                 dispatch({ type: "ROOM_INFO_UPDATE", payload: { saveMsg: "saving..." } })
+
                 handleUpdatecontent(roomContent.content)
             }, 1000);
         return () => {
@@ -61,7 +56,7 @@ const TextArea = () => {
                     {roomIdSubmit.loading ? <div>content is loading</div> :
                         roomContent.content !== null &&
                         <textarea
-                            className="form-control room_content"
+                            className="form-control room_content custom-scroll"
                             placeholder="Your content..."
                             value={roomContent.content}
                             onChange={handleRoomContent}
@@ -70,16 +65,6 @@ const TextArea = () => {
                 </div>
             </div>
             <ContentInfo />
-            {/* <div className='row'>
-                <div className='col-md-4 col-5 small'> {roomId.id.length > 0 ? characterSaveMsg() : "Please Enter room id"}  </div>
-                <div className='col-md-6 col-5 ms-auto text-end small'>{getDateFormat(roomInfo.last_modified)} </div>
-            </div>
-            <div className='row'>
-                <div className='col-md-4 col-5 small'> {roomInfo.ip ? "IP " + roomInfo.ip : "IP not available"} </div>
-                <div className='col-md-6 col-5 ms-auto text-end small'> </div>
-            </div> */}
-
-
         </>
     )
 }

@@ -4,11 +4,12 @@ import { RoomContext } from '../store/RoomProvider'
 import { roomIdSubmitTypes } from '../types'
 import { FaUsers, FaLock } from "react-icons/fa"
 import CredentialModal from './CredentialModal'
-import { getLocalStorageObj } from '../utils'
+import { getLocalStorageObj, updateLinks } from '../utils'
 const IdInpute = () => {
   const [isModalShow, setModalShow] = useState(false);
   const { roomId, roomPassword, dispatch } = useContext(RoomContext)
   const [isRoomIdChanged, setRoomIdChanged] = useState(false);
+
   const initialTab = (getLocalStorageObj("localRoomId", "password") && "secure") || "public";
   const [tab, setTab] = useState(initialTab)
   const [errorMsg, setErrorMsg] = useState("");
@@ -16,9 +17,7 @@ const IdInpute = () => {
   const [isRoomSecure, setRoomSecure] = useState(false);
   const { FETCH, SUCCESS, ERROR, RESET } = roomIdSubmitTypes;
 
-  // const [isRoomIdChanged, setRoomIdChanged] = useState(false);
-  // const [localRoomId, setLocalRoomId] = useState(getLocalStorageObj("localRoomId", "id"))
-  // console.log(localRoomId,"local room id");
+
 
   const setDataInStore = (res) => {
     dispatch({ type: SUCCESS, payload: res.data })
@@ -26,6 +25,8 @@ const IdInpute = () => {
     // for content character length in contentinfo
     dispatch({ type: "ROOM_CONTENT_UPDATE", payload: content })
     dispatch({ type: "ROOM_INFO_UPDATE", payload: { ip, last_modified, saveMsg: "saved." } })
+    const { urls, numbers } = updateLinks(content);
+    dispatch({ type: "ROOM_LINKS_UPDATE", payload: { urls, numbers } })
     setErrorMsg("");
   }
 
@@ -55,21 +56,26 @@ const IdInpute = () => {
         localStorage.setItem("localRoomId", JSON.stringify(localStorageData))
         setRoomSecure(true);
       } else {
+        dispatch({ type: "ROOM_ID_ERROR", payload: res.msg })
+        setErrorMsg(res.msg)
         console.log("Error in login");
       }
+      setRoomIdChanged(false);
     })
+
   }
 
   const handleCreateRoom = () => {
     localStorage.setItem("localRoomId", JSON.stringify({ id: roomId.id }))
+    dispatch({ type: "ROOM_CONTENT_RESET" })
     dispatch({ type: "ROOM_ID_FETCH" })
     const formData = new FormData();
     formData.append("room_id", roomId.id);
     createRoomApi(formData).then((res) => {
       if (res.status === "success") {
-        const { ip, last_modified } = res.data;
+        const { ip, last_modified, content } = res.data;
         dispatch({ type: "ROOM_ID_SUCCESS", payload: res.data })
-        // dispatch({ type: "ROOM_CONTENT_UPDATE", payload: res.data })
+        dispatch({ type: "ROOM_CONTENT_UPDATE", payload: content })
         dispatch({ type: "ROOM_INFO_UPDATE", payload: { ip, last_modified, saveMsg: "saved." } })
         setSuccessMsg("Room Created Successfully")
         setTimeout(() => setSuccessMsg(""), 3000)
@@ -101,10 +107,14 @@ const IdInpute = () => {
       }
       isRoomIdChanged && handleCreateRoom();
     } else {
-      if (!roomId.id || !roomId.password) {
-        setErrorMsg("Please enter correct roomId and password");
+
+
+      if (!roomId.id || !roomPassword.password) {
+        setErrorMsg("Please enter correct roomId and passwords");
       }
-      handleLoginRoom()
+      if (isRoomIdChanged) {
+        handleLoginRoom()
+      }
     }
   }
   const handleAuth = () => {
@@ -143,14 +153,17 @@ const IdInpute = () => {
     dispatch({ type: "ROOM_PASSWORD_RESET" });
     dispatch({ type: "ROOM_CONTENT_RESET" })
     dispatch({ type: "ROOM_INFO_RESET" })
+    setErrorMsg("");
+    setSuccessMsg("");
     setTab(roomType)
   }
-  // console.log(roomPassword.password, roomId.id, "currentvalue")
+
   return (
     <>
       <CredentialModal show={isModalShow} onHide={() => setModalShow(false)} />
       <div className="row mb-2">
         <div className='col-md-9 col-6'>
+
           <div data-tip="Public" className={`btn ${tab === "public" ? "btn-dark shadow" : "btn-light"} me-1 `}>
             <FaUsers onClick={() => handleTab("public")} />
           </div>
@@ -167,7 +180,7 @@ const IdInpute = () => {
         {!isRoomSecure && <div className='col-md-3 col-6 btn text-end' onClick={() => setModalShow(true)}>Secure This Room</div>}
       </div>
       <div className='row'>
-        <form className="col-12" onSubmit={handleRoomSubmit} autoComplete={undefined}>
+        <form className="col-12" onSubmit={handleRoomSubmit} >
           <div className="input-group">
             <input className="form-control" id="room_id" type="text" name="ROOM_ID" placeholder="Enter room id" value={roomId.id} onChange={handleInputFields} autoFocus aria-label="Enter room ID" aria-describedby="basic-addon2" autoComplete='off' />
 

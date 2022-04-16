@@ -59,7 +59,6 @@ export function actionTypeCreator(type) {
   };
 }
 
-
 export const combineReducers = (reducers) => {
   const reducerKeys = Object.keys(reducers);
   const reducerValues = Object.values(reducers);
@@ -89,4 +88,23 @@ export const combineReducers = (reducers) => {
     },
     globalState,
   ];
+};
+
+export const updateLinks = (content) => {
+  let urls = content.match(
+    /(https?:\/\/)?(www\.)?[-a-zA-Z0-9@:%.+~#=]{1,256}\.[a-zA-Z0-9()]{2,6}\b([-a-zA-Z0-9()@:%+.~#?&//=_]*)/gm
+  );
+  urls =
+    urls &&
+    urls.map((url) => {
+      if (url.includes("http")) {
+        return url;
+      } else {
+        return `http://${url}`;
+      }
+    });
+  let numbers = content.match(
+    /\s*(?:\+?(\d{1,3}))?[-. (]*(\d{3})[-. )]*(\d{3})[-. ]*(\d{4})(?: *x(\d+))?\s*/gm
+  );
+  return { urls, numbers };
 };
