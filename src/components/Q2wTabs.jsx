@@ -8,21 +8,12 @@ const Q2wTabs = () => {
     const [state, setState] = useState({ urls: [], numbers: [] })
 
     useEffect(() => {
-        setState(roomLinks)
-        console.log("added")
-    }, [roomLinks])
-    // debouncing
-    // useEffect(() => {
-    //     let timeoutid;
-    //     timeoutid = setTimeout(() => {
-    //         setState(roomLinks);
-    //     }, 1000)
-
-    //     return () => {
-    //         clearTimeout(timeoutid);
-    //     }
-    // }, [roomLinks])
-
+        // debugger
+        if (roomLinks.urls.length !== state.urls.length || roomLinks.numbers.length !== state.numbers.length) {
+            setState(roomLinks)
+            console.log(roomLinks, "added")
+        }
+    }, [roomLinks.urls, roomLinks.numbers])
     return (
         <div>
             <Tabs id="uncontrolled-tab-example">
@@ -44,4 +35,4 @@ const Q2wTabs = () => {
     )
 }
 
-export default Q2wTabs
+export default Q2wTabs;
