@@ -8,10 +8,8 @@ const Q2wTabs = () => {
     const [state, setState] = useState({ urls: [], numbers: [] })
 
     useEffect(() => {
-        // debugger
         if (roomLinks.urls.length !== state.urls.length || roomLinks.numbers.length !== state.numbers.length) {
             setState(roomLinks)
-            console.log(roomLinks, "added")
         }
     }, [roomLinks.urls, roomLinks.numbers])
     return (

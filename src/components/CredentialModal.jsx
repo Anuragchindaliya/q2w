@@ -5,7 +5,7 @@ import { RoomContext } from '../store/RoomProvider'
 import { setPasswordApi } from '../services'
 
 const CredentialModal = ({ show, onHide, }) => {
-    // const [password, setPassword] = useState("");
+
     const { roomId, isAuth, dispatch } = useContext(RoomContext);
     const [state, setSate] = useState({ password: "", email: "" })
     const { password, email } = state;
@@ -15,11 +15,7 @@ const CredentialModal = ({ show, onHide, }) => {
         formData.append("pass", password);
         formData.append("last_modified", now());
         setPasswordApi(formData).then((result) => {
-            // console.log(result, "updatepassword")
             onHide();
-            // setResData({
-            //     ...resData, last_modified: getDateFormat(now())
-            // })
         })
     }
     const handleState = (e) => {
@@ -39,7 +35,8 @@ const CredentialModal = ({ show, onHide, }) => {
                     console.log("room is secure");
                     const { room_id, pass } = res.data;
                     localStorage.setItem("localRoomId", JSON.stringify({ id: room_id, password: pass }))
-                    dispatch({ type: "ROOM_INFO_UPDATE", payload: res.data })
+                    dispatch({ type: "ROOM_INFO_UPDATE", payload: res.data });
+                    dispatch({ type: "ROOM_TYPE_UPDATE", payload: "secure" });
                 } else if (res.status === "failure") {
                     console.log(res.msg)
                 }

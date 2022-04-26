@@ -5,13 +5,14 @@ import { roomIdSubmitTypes } from '../types'
 import { FaUsers, FaLock } from "react-icons/fa"
 import CredentialModal from './CredentialModal'
 import { getLocalStorageObj, updateLinks } from '../utils'
+
 const IdInpute = () => {
   const [isModalShow, setModalShow] = useState(false);
   const { roomId, roomPassword, dispatch } = useContext(RoomContext)
   const [isRoomIdChanged, setRoomIdChanged] = useState(false);
 
-  const initialTab = (getLocalStorageObj("localRoomId", "password") && "secure") || "public";
-  const [tab, setTab] = useState(initialTab)
+  // const initialTab = (getLocalStorageObj("localRoomId", "password") && "secure") || "public";
+  const [tab, setTab] = useState(roomId.roomType);
   const [errorMsg, setErrorMsg] = useState("");
   const [successMsg, setSuccessMsg] = useState("")
   const [isRoomSecure, setRoomSecure] = useState(false);
@@ -28,18 +29,9 @@ const IdInpute = () => {
     const { urls, numbers } = updateLinks(content);
     dispatch({ type: "ROOM_LINKS_UPDATE", payload: { urls, numbers } })
     setErrorMsg("");
+
   }
 
-  // const hitApi = (formData, apiType) => {
-  //   dispatch({ type: FETCH })
-  //   return apiType(formData).then((res) => {
-  //     if (res.status === "success") {
-  //       setDataInStore()
-  //     } else {
-  //       console.log("Error in login");
-  //     }
-  //   })
-  // }
   const handleLoginRoom = () => {
     dispatch({ type: "ROOM_ID_FETCH" })
     const formData = new FormData();
@@ -54,6 +46,7 @@ const IdInpute = () => {
           password: res.data.pass
         }
         localStorage.setItem("localRoomId", JSON.stringify(localStorageData))
+        dispatch({ type: "ROOM_TYPE_UPDATE", payload: "secure" });
         setRoomSecure(true);
       } else {
         dispatch({ type: "ROOM_ID_ERROR", payload: res.msg })
@@ -79,6 +72,7 @@ const IdInpute = () => {
         dispatch({ type: "ROOM_INFO_UPDATE", payload: { ip, last_modified, saveMsg: "saved." } })
         setSuccessMsg("Room Created Successfully")
         setTimeout(() => setSuccessMsg(""), 3000)
+        dispatch({ type: "ROOM_TYPE_UPDATE", payload: "public" });
         // setDataInStore(res);
       } else if (res.status === "already") {
 
@@ -92,6 +86,7 @@ const IdInpute = () => {
         // dispatch({ type: "ROOM_ID_RESET" })
         dispatch({ type: "ROOM_INFO_RESET" })
         setErrorMsg("This room is secure")
+        dispatch({ type: "ROOM_TYPE_UPDATE", payload: "secure" });
       } else if (res.status === "failure") {
       }
     }).catch(err => {
@@ -131,6 +126,7 @@ const IdInpute = () => {
         // }
         // localStorage.setItem("localRoomId", JSON.stringify(localStorageData))
       } else {
+        setErrorMsg("Incorrect roomid's password");
         console.log("Error in login");
       }
     });
@@ -142,6 +138,13 @@ const IdInpute = () => {
       handleAuth();
     }
   }, [])
+  useEffect(() => {
+    setTab(roomId.roomType);
+    if (roomId.roomType === "secure") {
+      setRoomSecure(true);
+    }
+  }, [roomId.roomType]);
+
 
   const handleInputFields = (e) => {
     //for roomid and password change
@@ -157,7 +160,10 @@ const IdInpute = () => {
     setSuccessMsg("");
     setTab(roomType)
   }
-
+  const clearCache = (e) => {
+    localStorage.removeItem("localRoomId")
+    window.location.reload()
+  }
   return (
     <>
       <CredentialModal show={isModalShow} onHide={() => setModalShow(false)} />
@@ -196,7 +202,7 @@ const IdInpute = () => {
 
       </div>
       <div className="row">
-        <div className="col-12">{errorMsg && <div className='text-danger'>{errorMsg}</div>}</div>
+        <div className="col-12">{errorMsg && <div className='text-danger'>{errorMsg} <div className='btn btn-primary' onClick={clearCache}>clear cache</div></div>}</div>
       </div>
     </>
   )

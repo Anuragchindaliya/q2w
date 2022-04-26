@@ -4,7 +4,6 @@ import { getDateFormat } from '../utils';
 
 const ContentInfo = () => {
     const { roomId, roomInfo, roomContent } = useContext(RoomContext);
-    // console.log(roomContent, "content from content info");
     const characterSaveMsg = () => {
         if (roomContent.content.length === 0) {
             return `No character ${roomInfo.saveMsg}`;
